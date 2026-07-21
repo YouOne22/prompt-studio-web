@@ -1,6 +1,7 @@
 from prompts.base_engine import build_art_direction_block
 from prompts.spanduk.pengajian import get_spanduk_pengajian_prompt
-from prompts.spanduk.formal_rapat import (
+from prompts.spanduk.formal_rapat import
+from prompts.background_only import get_background_only_prompt (
     get_spanduk_formal_modern_prompt, 
     get_spanduk_formal_klasik_prompt
 )
@@ -41,3 +42,23 @@ def get_general_fallback(req) -> str:
     )
     extra = f"\n- Detailed Content Information:\n{req.details}" if req.details else ""
     return f"[MASTER DESIGN BRIEF]\n{art_block}\nProvide a clean, balanced layout structure and print-ready visual direction.{extra}"
+
+def build_prompt(req):
+    sub = req.sub_style.lower()
+
+    # Cek jika user memilih fitur Background Only
+    if "background" in sub or "polosan" in sub:
+        final_prompt = get_background_only_prompt(req)
+    elif "spanduk" in req.design_type.lower():
+        if "klasik" in sub or "konvensional" in sub:
+            final_prompt = get_spanduk_formal_klasik_prompt(req)
+        else:
+            final_prompt = get_spanduk_formal_modern_prompt(req)
+    else:
+        final_prompt = get_general_fallback(req)
+
+    system_instruction = (
+        f"Kamu adalah Master Prompt Engineer. Tugasmu membuat brief background polosan tanpa teks untuk {req.target_ai}."
+    )
+    
+    return system_instruction, f"Generate Master Prompt:\n{final_prompt}", final_prompt
