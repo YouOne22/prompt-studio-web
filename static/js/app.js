@@ -22,7 +22,24 @@ function toggleCustomSizeInput() {
     document.getElementById('customSizeContainer').classList.toggle('hidden', !isCustom);
 }
 
-// Fungsi Utama Render Form Dinamis di Area Tengah
+// Fungsi memasukkan warna saat chip diklik
+function applyColorPalette(colorValue, btnEl) {
+    const notesInput = document.getElementById('field_notes');
+    if (notesInput) {
+        notesInput.value = colorValue;
+    }
+
+    // Highlight tombol warna yang aktif
+    document.querySelectorAll('.color-chip').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'border-indigo-400', 'text-white');
+        btn.classList.add('bg-[#1a1d2e]', 'border-gray-700', 'text-gray-300');
+    });
+
+    btnEl.classList.remove('bg-[#1a1d2e]', 'border-gray-700', 'text-gray-300');
+    btnEl.classList.add('bg-indigo-600', 'border-indigo-400', 'text-white');
+}
+
+// Render Form Dinamis + Quick Color Chips
 function renderDynamicForm() {
     const designType = document.getElementById('designTypeSelect').value;
     const subStyle = document.getElementById('subStyleSelect').value;
@@ -39,6 +56,32 @@ function renderDynamicForm() {
         const label = document.createElement('label');
         label.className = "block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2";
         label.innerText = field.label;
+
+        // Jika ini field catatan, sisipkan Quick Color Palette Chips di atasnya
+        if (field.id === "notes") {
+            const colorContainer = document.createElement('div');
+            colorContainer.className = "mb-2.5";
+            
+            const colorLabel = document.createElement('span');
+            colorLabel.className = "block text-[11px] text-gray-400 mb-1.5 font-medium";
+            colorLabel.innerText = "⚡ Quick Color Palette (Klik untuk warna instan):";
+            colorContainer.appendChild(colorLabel);
+
+            const chipWrapper = document.createElement('div');
+            chipWrapper.className = "flex flex-wrap gap-1.5";
+
+            colorPalettes.forEach(palette => {
+                const chip = document.createElement('button');
+                chip.type = "button";
+                chip.className = "color-chip text-[11px] px-2.5 py-1 rounded-md border border-gray-700 bg-[#1a1d2e] text-gray-300 hover:border-indigo-500 hover:text-white transition cursor-pointer";
+                chip.innerText = palette.label;
+                chip.onclick = () => applyColorPalette(palette.value, chip);
+                chipWrapper.appendChild(chip);
+            });
+
+            colorContainer.appendChild(chipWrapper);
+            wrapper.appendChild(colorContainer);
+        }
 
         let input;
         if (field.type === "textarea") {
@@ -75,7 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
     onSidebarChange();
 });
 
-// Mengumpulkan Seluruh Data Form dan Mengirim ke Backend
 async function generatePrompt() {
     const designType = document.getElementById('designTypeSelect').value;
     const subStyle = document.getElementById('subStyleSelect').value;
@@ -88,7 +130,6 @@ async function generatePrompt() {
     const tone = document.getElementById('toneSelect').value;
     const targetAi = document.getElementById('targetAiSelect').value;
 
-    // Kumpulkan seluruh isian dari form dinamis di tengah
     const dynamicFields = document.querySelectorAll('#dynamicFormContainer [id^="field_"]');
     let collectedDetails = [];
     dynamicFields.forEach(field => {
