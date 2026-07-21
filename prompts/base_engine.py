@@ -1,4 +1,4 @@
-# Modul Dasar Aturan Anti-AI Look & Standar Industri Desain Grafis
+# Modul Standar Anti-AI Look & Format Cetak
 
 NEGATIVE_PROMPT_RULES = (
     "DO NOT include generic 3D rendered plastic look, overly glossy textures, distorted floating text, "
@@ -32,8 +32,8 @@ def build_art_direction_block(design_type: str, sub_style: str, orientation: str
 [LAYOUT GRID & PRINT SAFE ZONE]
 - Safe Margin: Maintain 3-5 cm inner margin for eyelets/cutting lines.
 - Hierarchy: 
-  1. Primary Focal Point (Main Headline / Event Title) - 40% visual area.
-  2. Secondary Focus (Key details / Speaker / Sub-headline) - 30% area.
+  1. Primary Focal Point (Main Title / Headline) - 40% visual area.
+  2. Secondary Focus (Speaker / Key Details / Sub-headline) - 30% area.
   3. Action & Branding (Logos, Contact, Date, Location, CTA) - 30% area.
 
 [ANTI-AI LOOK & QUALITY CONSTRAINTS]
