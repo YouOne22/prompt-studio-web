@@ -1,6 +1,9 @@
 from prompts.base_engine import build_art_direction_block
 from prompts.spanduk.pengajian import get_spanduk_pengajian_prompt
-from prompts.spanduk.formal_rapat import get_spanduk_formal_prompt
+from prompts.spanduk.formal_rapat import (
+    get_spanduk_formal_modern_prompt, 
+    get_spanduk_formal_klasik_prompt
+)
 from prompts.kartu_nama.pengacara import get_kartu_nama_pengacara_prompt
 
 def build_prompt(req):
@@ -8,10 +11,12 @@ def build_prompt(req):
     sub = req.sub_style.lower()
 
     if "spanduk" in d_type:
-        if "pengajian" in sub:
+        if "klasik" in sub or "konvensional" in sub:
+            final_prompt = get_spanduk_formal_klasik_prompt(req)
+        elif "formal" in sub or "executive" in sub or "modern" in sub:
+            final_prompt = get_spanduk_formal_modern_prompt(req)
+        elif "pengajian" in sub:
             final_prompt = get_spanduk_pengajian_prompt(req)
-        elif "formal" in sub or "rapat" in sub:
-            final_prompt = get_spanduk_formal_prompt(req)
         else:
             final_prompt = get_general_fallback(req)
     elif "kartu nama" in d_type and "pengacara" in sub:
@@ -22,6 +27,7 @@ def build_prompt(req):
     system_instruction = (
         f"Kamu adalah Art Director & Master Prompt Engineer profesional. "
         f"Tugasmu meracik brief desain visual bebas 'AI Look' untuk {req.target_ai}. "
+        f"PENTING: Jangan sertakan label nama field (seperti 'Tema Utama:') ke dalam gambar. "
         f"Output HARUS langsung berupa Master Prompt final tanpa kata sambutan."
     )
     
