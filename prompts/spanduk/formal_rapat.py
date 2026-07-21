@@ -4,7 +4,7 @@ def get_spanduk_formal_prompt(req) -> str:
     art_block = build_art_direction_block(
         req.design_type, req.sub_style, req.orientation, req.size, req.tone, req.render_mode
     )
-    extra = f"\n- Specific Details: {req.details}" if req.details else ""
+    extra = f"\n- Detailed Content Information:\n{req.details}" if req.details else ""
 
     return f"""
 [MASTER BRIEF: SPANDUK RAPAT & FORMAL RESMI]
@@ -18,8 +18,8 @@ Act as a Corporate Brand Identity Director. Create a clean, authoritative design
 - Typography: Bold Neo-Grotesque Sans-Serif (Helvetica / Inter style) for maximum readability.
 
 [CONTENT STRUCTURE]
-- Top Bar: Company / Agency Logos on the top left/right with proper breathing space.
-- Central Area: Event Name (e.g., "RAPAT KERJA NASIONAL / MUSYAWARAH DAERAH").
+- Top Bar: Company / Agency Logos on top left/right with proper breathing space.
+- Central Area: Event Name (e.g., "RAPAT KERJA NASIONAL").
 - Sub-text: Theme of the event in italicized clear font.
 - Bottom Bar: Date, Venue, and Committee info.{extra}
 """
