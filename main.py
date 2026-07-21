@@ -2,13 +2,14 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from google import genai
+import google.generativeai as genai
 
 app = FastAPI()
 
-# Mengambil API Key dari Variables Railway
+# Inisialisasi API Key dari Variables Railway
 api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key) if api_key else None
+if api_key:
+    genai.configure(api_key=api_key)
 
 class PromptRequest(BaseModel):
     topic: str
@@ -25,10 +26,10 @@ def health_check():
 
 @app.post("/api/generate")
 def generate_prompt(req: PromptRequest):
-    if not client:
+    if not api_key:
         raise HTTPException(
             status_code=500, 
-            detail="GEMINI_API_KEY belum terdeteksi. Pastikan variabel sudah ada di Railway."
+            detail="GEMINI_API_KEY belum terdeteksi di Railway."
         )
     
     system_instruction = (
@@ -47,11 +48,17 @@ def generate_prompt(req: PromptRequest):
     )
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=user_content,
-            config={"system_instruction": system_instruction}
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=system_instruction
         )
+        response = model.generate_content(user_content)
         return {"status": "success", "prompt": response.text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gagal generate dari AI: {str(e)}")
+        err_msg = str(e)
+        if "429" in err_msg:
+            raise HTTPException(
+                status_code=429, 
+                detail="Antrean AI sedang penuh (Rate Limit). Silakan tunggu sekitar 30 detik lalu coba lagi."
+            )
+        raise HTTPException(status_code=500, detail=f"Gagal generate dari AI: {err_msg}")
