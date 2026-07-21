@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight">Prompt Studio</h1>
+                <p class="text-xs text-slate-400">AI Prompt Generator & Workspace</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Server Active
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <!-- Panel Kiri: Input & Parameter -->
+        <section class="md:col-span-7 bg-slate-800/50 border border-slate-800 rounded-xl p-5 flex flex-col gap-4">
+            <h2 class="font-semibold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-indigo-400"></i> Prompt Builder
+            </h2>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Topik Utama / Perintah Core</label>
+                <input id="topicInput" type="text" placeholder="Contoh: Buat strategi pemasaran produk kopi lokal..." 
+                       class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Gaya Bahasa / Tone</label>
+                <select id="toneSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition">
+                    <option value="Professional & Persuasif">Professional & Persuasif</option>
+                    <option value="Santai & Kasual">Santai & Kasual</option>
+                    <option value="Kreatif & Naratif">Kreatif & Naratif</option>
+                    <option value="Kritis & Analitis">Kritis & Analitis</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Detail Tambahan / Instruksi Khusus</label>
+                <textarea id="detailsInput" rows="4" placeholder="Masukkan konteks spesifik, target audiens, atau format output yang diinginkan..." 
+                          class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
+            </div>
+
+            <button onclick="generatePrompt()" class="mt-auto bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-bolt"></i> Generate Optimised Prompt
+            </button>
+        </section>
+
+        <!-- Panel Kanan: Hasil Final -->
+        <section class="md:col-span-5 bg-slate-800/50 border border-slate-800 rounded-xl p-5 flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+                <h2 class="font-semibold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-emerald-400"></i> Output Result
+                </h2>
+                <button onclick="copyToClipboard()" class="text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1 rounded text-slate-300 transition flex items-center gap-1">
+                    <i class="fa-solid fa-copy"></i> Salin
+                </button>
+            </div>
+
+            <textarea id="outputResult" readonly placeholder="Hasil racikan prompt akan muncul di sini..." 
+                      class="w-full flex-1 bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-emerald-300 focus:outline-none resize-none min-h-[250px]"></textarea>
+        </section>
+
+    </main>
+
+    <script>
+        function generatePrompt() {
+            const topic = document.getElementById('topicInput').value.trim();
+            const tone = document.getElementById('toneSelect').value;
+            const details = document.getElementById('detailsInput').value.trim();
+
+            if (!topic) {
+                alert('Silakan isi Topik Utama terlebih dahulu!');
+                return;
+            }
+
+            let promptResult = `[PERAN & TUJUAN]\nKamu adalah seorang ahli dibidangnya. Jalankan tugas berikut dengan pendekatan ${tone}.\n\n`;
+            promptResult += `[TUGAS UTAMA]\n${topic}\n\n`;
+
+            if (details) {
+                promptResult += `[KONTEKS & KRITERIA KHUSUS]\n${details}\n\n`;
+            }
+
+            promptResult += `[FORMAT OUTPUT]\nBerikan jawaban yang terstruktur, jelas, dan mudah dipahami.`;
+
+            document.getElementById('outputResult').value = promptResult;
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('outputResult');
+            if (!output.value) return;
+            output.select();
+            document.execCommand('copy');
+            alert('Prompt berhasil disalin!');
+        }
+    </script>
+</body>
+</html>
