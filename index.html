@@ -7,133 +7,138 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #0d0f17; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #090a0f; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <header class="border-b border-gray-800 bg-[#131622] px-6 py-4 flex items-center justify-between">
+    <!-- Header Top Bar -->
+    <header class="border-b border-gray-800 bg-[#11131e] px-6 py-3.5 flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <div class="bg-indigo-600 p-2 rounded-lg text-white">
-                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+            <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-600/30">
+                <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-white">Prompt Studio</h1>
-                <p class="text-xs text-gray-400">Modular Print-Ready Design Generator</p>
+                <h1 class="text-base font-bold text-white tracking-wide">Prompt Studio</h1>
+                <p class="text-[11px] text-gray-400">Modular Print-Ready Design Generator</p>
             </div>
         </div>
-        <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1.5 rounded-full font-medium">
+        <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Modular Engine Active
         </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Main Workspace (3 Kolom Grid) -->
+    <main class="flex-1 w-full p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-        <!-- Form Input Builder -->
-        <section class="bg-[#131622] border border-gray-800 rounded-xl p-5 md:p-6 flex flex-col justify-between shadow-xl">
+        <!-- KOLOM 1: Sidebar Left (Design Parameters) - Span 3 -->
+        <section class="lg:col-span-3 bg-[#11131e] border border-gray-800/80 rounded-xl p-5 flex flex-col justify-between shadow-xl">
             <div>
-                <div class="flex items-center gap-2 mb-5 pb-3 border-b border-gray-800">
-                    <i class="fa-solid fa-sliders text-indigo-400"></i>
-                    <h2 class="font-semibold text-white">Design Parameters</h2>
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-800">
+                    <i class="fa-solid fa-sliders text-indigo-400 text-sm"></i>
+                    <h2 class="font-semibold text-sm text-white">Parameters</h2>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Jenis Desain</label>
-                    <select id="designTypeSelect" onchange="onDesignTypeChange()" class="w-full bg-[#1a1d2e] border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <div class="mb-3.5">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Jenis Desain</label>
+                    <select id="designTypeSelect" onchange="onSidebarChange()" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
                         <option value="Spanduk">Spanduk</option>
                         <option value="Poster">Poster</option>
-                        <option value="Stiker">Stiker</option>
                         <option value="Kartu Nama">Kartu Nama</option>
                         <option value="Lainnya">Lainnya / Umum</option>
                     </select>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Sub-Kategori / Style Modul</label>
-                    <select id="subStyleSelect" class="w-full bg-[#1a1d2e] border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500"></select>
+                <div class="mb-3.5">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Sub-Kategori / Modul</label>
+                    <select id="subStyleSelect" onchange="onSubStyleChange()" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"></select>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Orientasi</label>
-                        <select id="orientationSelect" class="w-full bg-[#1a1d2e] border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-                            <option value="Landscape (Horizontal)">Landscape (Horizontal)</option>
-                            <option value="Portrait (Vertikal)">Portrait (Vertikal)</option>
-                            <option value="Persegi (Square - 1:1)">Persegi (Square - 1:1)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Ukuran</label>
-                        <select id="sizeSelect" onchange="toggleCustomSizeInput()" class="w-full bg-[#1a1d2e] border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500"></select>
-                    </div>
-                </div>
-
-                <div id="customSizeContainer" class="mb-4 hidden">
-                    <label class="block text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">Ukuran Kustom</label>
-                    <input type="text" id="customSizeInput" placeholder="Contoh: 150 x 80 cm" class="w-full bg-[#1a1d2e] border border-indigo-500 rounded-lg p-3 text-sm text-white focus:outline-none">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Mode Output Visual</label>
-                    <select id="renderModeSelect" class="w-full bg-[#1a1d2e] border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-                        <option value="Flat Vector / Siap Cetak">Flat Vector / Layout 2D Siap Cetak</option>
-                        <option value="Mockup Realistis Studio">Mockup Realistis (Presentasi Klien)</option>
+                <div class="mb-3.5">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Orientasi</label>
+                    <select id="orientationSelect" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="Landscape (Horizontal)">Landscape (Horizontal)</option>
+                        <option value="Portrait (Vertikal)">Portrait (Vertikal)</option>
+                        <option value="Persegi (Square - 1:1)">Persegi (Square - 1:1)</option>
                     </select>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Tone Visual</label>
-                        <select id="toneSelect" class="w-full bg-[#1a1d2e] border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-                            <option value="Professional & Persuasif">Professional & Persuasif</option>
-                            <option value="Kreatif & Naratif">Kreatif & Naratif</option>
-                            <option value="Kasual & Ramah">Kasual & Ramah</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Target AI Platform</label>
-                        <select id="targetAiSelect" class="w-full bg-[#1a1d2e] border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-                            <option value="ChatGPT">ChatGPT (OpenAI)</option>
-                            <option value="Claude">Claude (Anthropic)</option>
-                            <option value="Gemini">Gemini (Google)</option>
-                            <option value="Midjourney">Midjourney / DALL-E</option>
-                        </select>
-                    </div>
+                <div class="mb-3.5">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Ukuran Preset</label>
+                    <select id="sizeSelect" onchange="toggleCustomSizeInput()" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"></select>
                 </div>
 
-                <div class="mb-5">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Detail Spesifik Tambahan</label>
-                    <textarea id="detailsInput" rows="3" placeholder="Isi nama penceramah, alamat, tema warna khusus, atau nama brand..." class="w-full bg-[#1a1d2e] border border-gray-700 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none resize-none"></textarea>
+                <div id="customSizeContainer" class="mb-3.5 hidden">
+                    <input type="text" id="customSizeInput" placeholder="Contoh: 150 x 80 cm" class="w-full bg-[#1a1d2e] border border-indigo-500 rounded-lg p-2.5 text-xs text-white focus:outline-none">
+                </div>
+
+                <div class="mb-3.5">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Mode Output Visual</label>
+                    <select id="renderModeSelect" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="Flat Vector / Siap Cetak">Flat Vector (2D Siap Cetak)</option>
+                        <option value="Mockup Realistis Studio">Mockup Realistis (Presentasi)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3.5">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Tone Visual</label>
+                    <select id="toneSelect" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="Professional & Persuasif">Professional & Persuasif</option>
+                        <option value="Kreatif & Naratif">Kreatif & Naratif</option>
+                        <option value="Kasual & Ramah">Kasual & Ramah</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Target AI Platform</label>
+                    <select id="targetAiSelect" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="ChatGPT">ChatGPT (OpenAI)</option>
+                        <option value="Claude">Claude (Anthropic)</option>
+                        <option value="Gemini">Gemini (Google)</option>
+                        <option value="Midjourney">Midjourney / DALL-E</option>
+                    </select>
                 </div>
             </div>
+        </section>
 
-            <button id="generateBtn" onclick="generatePrompt()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+        <!-- KOLOM 2: Center Dynamic Workspace - Span 5 -->
+        <section class="lg:col-span-5 bg-[#11131e] border border-gray-800/80 rounded-xl p-5 flex flex-col justify-between shadow-xl">
+            <div>
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-800">
+                    <i class="fa-solid fa-pen-to-square text-indigo-400 text-sm"></i>
+                    <h2 class="font-semibold text-sm text-white">Informasi Konten Desain</h2>
+                </div>
+
+                <!-- Container Form Dinamis (Terisi via JavaScript) -->
+                <div id="dynamicFormContainer"></div>
+            </div>
+
+            <button id="generateBtn" onclick="generatePrompt()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 mt-4">
                 <i class="fa-solid fa-bolt"></i> Generate Optimised Prompt
             </button>
         </section>
 
-        <!-- Output Result Panel -->
-        <section class="bg-[#131622] border border-gray-800 rounded-xl p-5 md:p-6 flex flex-col justify-between shadow-xl">
+        <!-- KOLOM 3: Output Right Panel - Span 4 -->
+        <section class="lg:col-span-4 bg-[#11131e] border border-gray-800/80 rounded-xl p-5 flex flex-col justify-between shadow-xl">
             <div class="flex-1 flex flex-col">
                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-800">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-terminal text-emerald-400"></i>
-                        <h2 class="font-semibold text-white">Output Brief Result</h2>
+                        <i class="fa-solid fa-terminal text-emerald-400 text-sm"></i>
+                        <h2 class="font-semibold text-sm text-white">Output Brief Result</h2>
                     </div>
-                    <button onclick="copyToClipboard()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs px-3 py-1.5 rounded-md border border-gray-700 transition flex items-center gap-1.5">
+                    <button onclick="copyToClipboard()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs px-3 py-1 rounded-md border border-gray-700 transition flex items-center gap-1.5">
                         <i class="fa-regular fa-copy"></i> Salin
                     </button>
                 </div>
 
                 <div class="flex-1 relative">
-                    <textarea id="outputResult" readonly placeholder="Brief Master Prompt anti-AI look akan muncul di sini..." class="w-full h-full min-h-[420px] bg-[#0a0c12] border border-gray-800 rounded-lg p-4 font-mono text-sm text-emerald-400 placeholder-gray-600 focus:outline-none resize-none leading-relaxed"></textarea>
+                    <textarea id="outputResult" readonly placeholder="Master prompt hasil racikan anti-AI look akan muncul di sini..." class="w-full h-full min-h-[450px] bg-[#090a0f] border border-gray-800 rounded-lg p-4 font-mono text-xs text-emerald-400 placeholder-gray-600 focus:outline-none resize-none leading-relaxed"></textarea>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Memuat file JavaScript terpisah dari folder static/js -->
     <script src="/static/js/options_data.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
