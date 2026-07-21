@@ -1,8 +1,9 @@
 // Data Dropdown
 const subStyleOptions = {
     "Spanduk": [
+        "Formal Modern / Executive (Minimalis)",
+        "Formal Klasik Pemda (Konvensional)",
         "Pengajian / Keagamaan",
-        "Formal (Rapat, Resmi, dan Lain-lain)",
         "Promosi Produk / Iklan Bisnis"
     ],
     "Kartu Nama": [
@@ -11,7 +12,7 @@ const subStyleOptions = {
         "Perusahaan / Korporat"
     ],
     "Poster": [
-        "Formal (Rapat, Resmi, dan Lain-lain)",
+        "Formal Modern / Executive (Minimalis)",
         "Pengajian / Keagamaan",
         "Promosi Produk / Iklan Bisnis"
     ],
@@ -19,14 +20,24 @@ const subStyleOptions = {
 };
 
 const sizePresetOptions = {
-    "Spanduk": ["3 x 1 meter", "2 x 1 meter", "4 x 1 meter", "Custom..."],
+    "Spanduk": ["4 x 1 meter", "3 x 1 meter", "2 x 1 meter", "Custom..."],
     "Kartu Nama": ["9 x 5.5 cm (Standar Indonesia)", "9 x 5 cm (Slim)", "Custom..."],
     "Poster": ["A4 (21 x 29.7 cm)", "A3 (29.7 x 42 cm)", "Custom..."],
     "Lainnya": ["1080 x 1080 px", "1920 x 1080 px", "Custom..."]
 };
 
-// Skema Form Dinamis untuk Area Tengah (Center Workspace)
+// Preset Form Dinamis
+const formalFormFields = [
+    { id: "title", label: "Nama Agenda / Rapat", placeholder: "e.g. MUSYAWARAH DESA", type: "input" },
+    { id: "subtitle", label: "Tema Utama", placeholder: "e.g. PENETAPAN APBDES TA 2026", type: "input" },
+    { id: "agency", label: "Instansi / Desa / Kecamatan", placeholder: "e.g. DESA MENDONGAN, KEC. SUMOWONO", type: "input" },
+    { id: "time_place", label: "Tanggal / Waktu", placeholder: "e.g. Mendongan, 7 Januari 2026", type: "input" },
+    { id: "notes", label: "Catatan Visual Khusus", placeholder: "Catatan warna/elemen...", type: "textarea" }
+];
+
 const formSchemas = {
+    "Spanduk_Formal Modern / Executive (Minimalis)": formalFormFields,
+    "Spanduk_Formal Klasik Pemda (Konvensional)": formalFormFields,
     "Spanduk_Pengajian / Keagamaan": [
         { id: "title", label: "Judul Utama / Acara", placeholder: "e.g. TABLIGH AKBAR & HALAL BIHALAL", type: "input" },
         { id: "subtitle", label: "Tema / Sub-Judul", placeholder: "e.g. Menjalin Ukhuwah Islamiyah di Era Digital", type: "input" },
@@ -34,13 +45,6 @@ const formSchemas = {
         { id: "time_place", label: "Waktu & Tempat", placeholder: "e.g. Minggu, 12 Agustus 2026 | Masjid Agung", type: "input" },
         { id: "organizer", label: "Penyelenggara / Logo", placeholder: "e.g. DKM Masjid Agung & Remaja Islam", type: "input" },
         { id: "notes", label: "Catatan Visual Khusus", placeholder: "e.g. Nuansa hijau botol, aksen ornamen islami emas", type: "textarea" }
-    ],
-    "Spanduk_Formal (Rapat, Resmi, dan Lain-lain)": [
-        { id: "title", label: "Nama Agenda / Rapat", placeholder: "e.g. RAPAT KERJA NASIONAL 2026", type: "input" },
-        { id: "subtitle", label: "Tema Utama", placeholder: "e.g. Sinergi Bersama Membangun Inovasi", type: "input" },
-        { id: "agency", label: "Instansi / Penyelenggara", placeholder: "e.g. PT. Indonesia Sukses Mandiri", type: "input" },
-        { id: "time_place", label: "Tanggal & Lokasi", placeholder: "e.g. 15-17 Oktober 2026 | Hotel Grand Ballroom", type: "input" },
-        { id: "notes", label: "Catatan Visual Khusus", placeholder: "e.g. Dominan warna biru navy korporat, bersih dan resmi", type: "textarea" }
     ],
     "Kartu Nama_Pengacara / Konsultan Hukum": [
         { id: "fullname", label: "Nama Lengkap & Gelar", placeholder: "e.g. Budi Santoso, S.H., M.H.", type: "input" },
@@ -57,10 +61,10 @@ const formSchemas = {
         { id: "contact_info", label: "Kontak & Lokasi", placeholder: "Isikan detail kontak, logo, atau alamat...", type: "input" },
         { id: "notes", label: "Catatan Warna & Elemen", placeholder: "Catatan gaya visual kustom...", type: "textarea" }
     ]
-}
-// Preset Palet Warna Siap Klik (Quick Color)
+};
+
 const colorPalettes = [
-    { label: "🟢 Emerald & Gold", value: "Nuansa Hijau Emerald (CMYK 85,20,90,40), Aksen Emas Metalik, Krem Off-White" },
+    { label: "🟢 Emerald & Gold", value: "Nuansa Hijau Emerald, Aksen Emas Metalik, Krem Off-White" },
     { label: "🔵 Navy Corporate", value: "Biru Navy Korporat, Aksen Cyan/Biru Muda, Putih Bersih" },
     { label: "🖤 Black & Gold Foil", value: "Hitam Matte/Dark Charcoal, Font & Border Emas Embossed" },
     { label: "🔴 Red & White Bold", value: "Merah Bold, Putih Bersih, Aksen Hitam Kontras Tinggi" },
