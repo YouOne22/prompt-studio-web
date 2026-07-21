@@ -10,7 +10,8 @@ api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key) if api_key else None
 
 class PromptRequest(BaseModel):
-    topic: str
+    design_type: str
+    sub_style: str
     tone: str
     target_ai: str = "ChatGPT"
     details: str = ""
@@ -23,43 +24,41 @@ def read_root():
 def health_check():
     return {"status": "ok", "app": "Prompt Studio Web"}
 
-def generate_local_fallback(topic: str, tone: str, target_ai: str, details: str) -> str:
-    tones_map = {
-        "Kreatif & Naratif": "Gunakan pendekatan bercerita yang imajinatif dan memikat.",
-        "Professional & Persuasif": "Gunakan gaya bahasa bisnis yang lugas, otoritatif, dan meyakinkan.",
-        "Kasual & Ramah": "Gunakan gaya bahasa santai, akrab, dan mudah dicerna.",
-        "Teknis & Detail": "Berikan spesifikasi teknis mendalam dan terstruktur logis."
-    }
-    
-    selected_tone = tones_map.get(tone, "Gunakan gaya profesional.")
-    extra = f"\nKonteks Tambahan: {details}" if details else ""
-
+def generate_local_fallback(design_type: str, sub_style: str, tone: str, target_ai: str, details: str) -> str:
+    extra = f"\n- Detail/Khas Klien: {details}" if details else ""
     return (
         f"[OPTIMIZED PROMPT FOR {target_ai.upper()}]\n\n"
-        f"Act as an elite Prompt Engineering Specialist. Your task is to process the following core objective:\n"
-        f"Topic: {topic}\n\n"
-        f"[EXECUTION GUIDELINES]\n"
-        f"- Tone & Style: {tone} ({selected_tone})\n"
-        f"- Target Platform: Optimized specifically for the nuances and capabilities of {target_ai}.\n"
-        f"- Structure: Provide a clear persona, step-by-step instructions, constraints, and expected output format.{extra}\n\n"
-        f"Deliver a highly structured, production-ready master prompt that is robust, actionable, and yields exceptional results."
+        f"Act as an expert Visual Design Director and Master Prompt Engineer. "
+        f"Your task is to generate professional design concepts, layout structures, and copywriting frameworks for:\n"
+        f"- Jenis Desain: {design_type.toUpperCase()}\n"
+        f"- Sub-Kategori / Gaya: {sub_style}\n"
+        f"- Tone & Gaya Bahasa: {tone}\n"
+        f"- Target Platform AI: {target_ai}\n"
+        f"{extra}\n\n"
+        f"[STRUKTUR OUTPUT YANG DIINGINKAN]\n"
+        f"1. Konsep Visual & Palet Warna Utama\n"
+        f"2. Tata Letak (Layout & Hierarki Informasi)\n"
+        f"3. Draf Copywriting / Teks Utama yang Persuasif\n"
+        f"4. Prompt Spesifik (jika untuk AI Image Generator seperti Midjourney / DALL-E) atau Instruksi Eksekusi."
     )
 
 @app.post("/api/generate")
 def generate_prompt(req: PromptRequest):
     system_instruction = (
-        f"Kamu adalah Prompt Engineering Specialist tingkat tinggi. "
-        f"Tugasmu adalah meracik topik, tone, dan detail dari user menjadi Master Prompt "
-        f"yang sangat efektif dan terstruktur khusus untuk platform {req.target_ai}.\n\n"
-        f"Aturan Penting: Output HARUS langsung berupa teks prompt final tanpa salam pembuka, "
-        f"tanpa penjelasan tambahan, dan tanpa komentar meta."
+        f"Kamu adalah pakar Desain Grafis dan Prompt Engineering tingkat tinggi. "
+        f"Tugasmu adalah merancang instruksi/prompt profesional untuk pembuatan aset visual "
+        f"berupa {req.design_type} dengan gaya '{req.sub_style}', bernuansa '{req.tone}', "
+        f"khusus untuk platform {req.target_ai}.\n\n"
+        f"Aturan Penting: Output HARUS langsung berupa teks prompt final yang terstruktur, "
+        f"kaya detail kreatif, tanpa salam pembuka dan tanpa penjelasan tambahan."
     )
 
     user_content = (
-        f"Topik Utama: {req.topic}\n"
-        f"Gaya Bahasa/Tone: {req.tone}\n"
+        f"Jenis Desain: {req.design_type}\n"
+        f"Sub-Kategori/Gaya Desain: {req.sub_style}\n"
+        f"Tone/Gaya Bahasa: {req.tone}\n"
         f"Target AI: {req.target_ai}\n"
-        f"Detail/Konteks Khusus: {req.details if req.details else 'Tidak ada'}"
+        f"Detail Tambahan: {req.details if req.details else 'Tidak ada'}"
     )
 
     if client:
@@ -75,5 +74,5 @@ def generate_prompt(req: PromptRequest):
             pass
 
     # Fallback lokal cerdas jika AI offline/limit
-    fallback_result = generate_local_fallback(req.topic, req.tone, req.target_ai, req.details)
+    fallback_result = generate_local_fallback(req.design_type, sub_style=req.sub_style, tone=req.tone, target_ai=req.target_ai, details=req.details)
     return {"status": "success", "prompt": fallback_result}
