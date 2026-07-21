@@ -6,7 +6,7 @@ from google import genai
 
 app = FastAPI()
 
-# Mengambil API Key dari Environment Variable Railway
+# Mengambil API Key dari Variables Railway
 api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key) if api_key else None
 
@@ -28,7 +28,7 @@ def generate_prompt(req: PromptRequest):
     if not client:
         raise HTTPException(
             status_code=500, 
-            detail="GEMINI_API_KEY belum dipasang di Variables Railway."
+            detail="GEMINI_API_KEY belum terdeteksi. Pastikan variabel sudah ada di Railway."
         )
     
     system_instruction = (
