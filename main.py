@@ -46,8 +46,8 @@ def generate_prompt(req: PromptRequest):
         f"Detail/Konteks Khusus: {req.details if req.details else 'Tidak ada'}"
     )
 
-    # URL Endpoint Resmi Gemini 1.5 Flash (REST API v1beta)
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    # Menggunakan endpoint v1 Stable
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
 
     payload = {
         "system_instruction": {
