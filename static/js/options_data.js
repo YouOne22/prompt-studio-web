@@ -57,4 +57,13 @@ const formSchemas = {
         { id: "contact_info", label: "Kontak & Lokasi", placeholder: "Isikan detail kontak, logo, atau alamat...", type: "input" },
         { id: "notes", label: "Catatan Warna & Elemen", placeholder: "Catatan gaya visual kustom...", type: "textarea" }
     ]
-};
+}
+// Preset Palet Warna Siap Klik (Quick Color)
+const colorPalettes = [
+    { label: "🟢 Emerald & Gold", value: "Nuansa Hijau Emerald (CMYK 85,20,90,40), Aksen Emas Metalik, Krem Off-White" },
+    { label: "🔵 Navy Corporate", value: "Biru Navy Korporat, Aksen Cyan/Biru Muda, Putih Bersih" },
+    { label: "🖤 Black & Gold Foil", value: "Hitam Matte/Dark Charcoal, Font & Border Emas Embossed" },
+    { label: "🔴 Red & White Bold", value: "Merah Bold, Putih Bersih, Aksen Hitam Kontras Tinggi" },
+    { label: "🟣 Purple Gradient", value: "Ungu Gradient Modern, Aksen Magenta & Putih Soft" },
+    { label: "⚪ Minimalist Mono", value: "Monokrom Hitam Putih, Minimalis, Clean Grey Textures" }
+];
