@@ -39,3 +39,28 @@ def build_art_direction_block(design_type: str, sub_style: str, orientation: str
 - {NEGATIVE_PROMPT_RULES}
 - {render_inst}
 """
+
+# Aturan khusus untuk Background Polosan
+BACKGROUND_ONLY_NEGATIVE_PROMPT = (
+    "STRICTLY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO TYPOGRAPHY, NO ALPHABET, "
+    "NO LOGOS, NO EMBLEMS, NO WATERMARKS, NO READABLE CHARACTERS. "
+    "DO NOT print any text elements or placeholders. "
+    "Pure empty graphic template background only with clean layout framing."
+)
+
+def build_background_art_direction(design_type: str, orientation: str, size: str, render_mode: str) -> str:
+    return f"""
+[SPECIFICATIONS & ART DIRECTION]
+- Product Type: {design_type.upper()} BACKGROUND TEMPLATE
+- Style Category: Clean Graphics / Graphic Background Only
+- Layout Orientation: {orientation}
+- Print Dimensions: {size}
+- Render Output Mode: {render_mode}
+
+[BACKGROUND COMPOSITION & NEGATIVE SPACE]
+- Composition: High-end graphic template background. Must provide ample 'Negative Space' (clean, un-cluttered central area) specifically designed for text overlay in CorelDRAW/Canva.
+- Framing: Outer geometric or abstract borders, leaving 70% of central visual area clean and open.
+
+[ANTI-TEXT CONSTRAINTS]
+- {BACKGROUND_ONLY_NEGATIVE_PROMPT}
+"""
