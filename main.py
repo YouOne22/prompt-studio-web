@@ -1,349 +1,104 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt Studio - AI Prompt Generator & Workspace</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background-color: #0d0f17;
-            color: #e2e8f0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col">
+import os
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from google import genai
 
-    <!-- Header / Navbar -->
-    <header class="border-b border-gray-800 bg-[#131622] px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="bg-indigo-600 p-2 rounded-lg text-white flex items-center justify-center">
-                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
-            </div>
-            <div>
-                <h1 class="text-lg font-bold tracking-wide text-white">Prompt Studio</h1>
-                <p class="text-xs text-gray-400">AI Prompt Generator & Visual Workspace</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1.5 rounded-full font-medium">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Server Active
-        </div>
-    </header>
+app = FastAPI()
 
-    <!-- Main Workspace Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+api_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key) if api_key else None
 
-        <!-- Left Column: Prompt Builder -->
-        <section class="bg-[#131622] border border-gray-800 rounded-xl p-5 md:p-6 flex flex-col justify-between shadow-xl">
-            <div>
-                <div class="flex items-center gap-2 mb-5 pb-3 border-b border-gray-800">
-                    <i class="fa-solid fa-pen-to-square text-indigo-400"></i>
-                    <h2 class="font-semibold text-white">Prompt Builder</h2>
-                </div>
+class PromptRequest(BaseModel):
+    design_type: str
+    sub_style: str
+    orientation: str = "Landscape (Horizontal)"
+    size: str = "3x1 meter"
+    tone: str = "Professional & Persuasif"
+    target_ai: str = "ChatGPT"
+    details: str = ""
 
-                <!-- Input: Jenis Desain -->
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Jenis Desain</label>
-                    <select id="designTypeSelect" onchange="onDesignTypeChange()" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition duration-150">
-                        <option value="Spanduk">Spanduk</option>
-                        <option value="Poster">Poster</option>
-                        <option value="Stiker">Stiker</option>
-                        <option value="Kartu Nama">Kartu Nama</option>
-                        <option value="Lainnya">Lainnya / Umum</option>
-                    </select>
-                </div>
+@app.get("/", response_class=FileResponse)
+def read_root():
+    return FileResponse("index.html")
 
-                <!-- Input: Sub-Kategori / Gaya Desain -->
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Gaya Desain / Sub-Kategori</label>
-                    <select id="subStyleSelect" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition duration-150">
-                        <!-- Otomatis diisi oleh JavaScript -->
-                    </select>
-                </div>
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "app": "Prompt Studio Web"}
 
-                <!-- Grid 2 Kolom: Orientasi & Ukuran -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <!-- Input: Orientasi -->
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Orientasi</label>
-                        <select id="orientationSelect" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition duration-150">
-                            <option value="Landscape (Horizontal)">Landscape (Horizontal)</option>
-                            <option value="Portrait (Vertikal)">Portrait (Vertikal)</option>
-                            <option value="Persegi (Square - 1:1)">Persegi (Square - 1:1)</option>
-                        </select>
-                    </div>
+def generate_local_fallback(design_type: str, sub_style: str, orientation: str, size: str, tone: str, target_ai: str, details: str) -> str:
+    extra = f"\n- Catatan Spesifik / Konteks: {details}" if details else ""
+    
+    # Menentukan parameter aspect ratio untuk AI Image Generator (Midjourney / DALL-E)
+    ar_hint = "--ar 16:9"
+    if "Portrait" in orientation:
+        ar_hint = "--ar 2:3" if ("Kartu" in design_type or "Poster" in design_type) else "--ar 9:16"
+    elif "Persegi" in orientation or "Square" in orientation:
+        ar_hint = "--ar 1:1"
+    elif "Landscape" in orientation:
+        ar_hint = "--ar 3:1" if "Spanduk" in design_type else "--ar 16:9"
 
-                    <!-- Input: Ukuran -->
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Ukuran</label>
-                        <select id="sizeSelect" onchange="toggleCustomSizeInput()" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition duration-150">
-                            <!-- Otomatis diisi oleh JavaScript -->
-                        </select>
-                    </div>
-                </div>
+    return (
+        f"[MASTER DESIGN PROMPT FOR {target_ai.upper()}]\n\n"
+        f"Act as a World-Class Art Director and Master Visual Designer. "
+        f"Create an exhaustive, professional design brief and generation prompt for the following project:\n\n"
+        f"[PROJECT SPECIFICATIONS]\n"
+        f"- Jenis Desain: {design_type.upper()}\n"
+        f"- Sub-Kategori / Gaya: {sub_style}\n"
+        f"- Orientasi Tata Letak: {orientation}\n"
+        f"- Dimensi Ukuran: {size}\n"
+        f"- Tone & Visual Atmosphere: {tone}\n"
+        f"- Target AI Platform: {target_ai}{extra}\n\n"
+        f"[BRIEF DESAIN & INSTRUKSI EKSEKUSI]\n"
+        f"1. KONSEP VISUAL & ATMOSFER:\n"
+        f"   - Rekomendasi Palet Warna (Warna Utama, Sekunder, dan Aksensuasi).\n"
+        f"   - Gaya Tipografi (Font Header yang menonjol & Font Body yang legibel).\n\n"
+        f"2. TATA LETAK & HIERARKI VISUAL ({size} - {orientation}):\n"
+        f"   - Pembagian area fokus (Focal Point), penempatan Judul Utama, dan Call-to-Action (CTA).\n"
+        f"   - Batas aman cetak (Safe Zone & Bleed Margins) jika untuk media cetak.\n\n"
+        f"3. DRAF COPYWRITING PERSUASIF:\n"
+        f"   - Headline memikat, Sub-headline pendukung, dan susunan teks informasi penting.\n\n"
+        f"4. PROMPT SPESIFIK GENERATOR GAMBAR (Midjourney / DALL-E / Stable Diffusion):\n"
+        f"   - Teks prompt visual: High resolution, photorealistic / clean vector illustration, professional studio lighting, centered layout, {ar_hint}."
+    )
 
-                <!-- Input Kustom Ukuran (Conditional Input) -->
-                <div id="customSizeContainer" class="mb-4 hidden">
-                    <label class="block text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">Isi Ukuran Kustom Anda</label>
-                    <input type="text" id="customSizeInput" placeholder="Contoh: 150 x 80 cm, 2500 x 1080 px, dll." class="w-full bg-[#1a1d2e] border border-indigo-500/60 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 transition duration-150">
-                </div>
+@app.post("/api/generate")
+def generate_prompt(req: PromptRequest):
+    system_instruction = (
+        f"Kamu adalah Art Director dan Prompt Engineering Specialist tingkat tinggi. "
+        f"Tugasmu adalah merancang Master Prompt desain visual profesional berstandar industri tinggi "
+        f"untuk pembuatan '{req.design_type}' gaya '{req.sub_style}', berukuran '{req.size}' ({req.orientation}). "
+        f"Gaya bahasa/tone adalah '{req.tone}' dan ditujukan khusus untuk platform '{req.target_ai}'.\n\n"
+        f"Aturan Penting:\n"
+        f"1. Buat struktur brief yang mencakup Komposisi Visual, Tata Letak presisi sesuai ukuran {req.size}, Palet Warna, dan Draf Teks Persuasif.\n"
+        f"2. Sertakan rekomendasi parameter aspect ratio (--ar) jika dipakai pada AI Image Generator.\n"
+        f"3. Output HARUS langsung berupa Master Prompt final tanpa salam pembuka dan tanpa penjelasan meta."
+    )
 
-                <!-- Input: Gaya Bahasa / Tone -->
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Gaya Bahasa / Tone</label>
-                    <select id="toneSelect" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition duration-150">
-                        <option value="Professional & Persuasif">Professional & Persuasif</option>
-                        <option value="Kreatif & Naratif">Kreatif & Naratif</option>
-                        <option value="Kasual & Ramah">Kasual & Ramah</option>
-                        <option value="Teknis & Detail">Teknis & Detail</option>
-                    </select>
-                </div>
+    user_content = (
+        f"Jenis Desain: {req.design_type}\n"
+        f"Sub-Kategori/Gaya: {req.sub_style}\n"
+        f"Orientasi: {req.orientation}\n"
+        f"Ukuran: {req.size}\n"
+        f"Tone/Gaya Bahasa: {req.tone}\n"
+        f"Target AI: {req.target_ai}\n"
+        f"Detail Tambahan: {req.details if req.details else 'Tidak ada'}"
+    )
 
-                <!-- Input: Target AI Platform -->
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Target AI Platform</label>
-                    <select id="targetAiSelect" class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition duration-150">
-                        <option value="ChatGPT">ChatGPT (OpenAI)</option>
-                        <option value="Claude">Claude (Anthropic)</option>
-                        <option value="Gemini">Gemini (Google)</option>
-                        <option value="Midjourney">Midjourney / Image Generator</option>
-                    </select>
-                </div>
+    if client:
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=user_content,
+                config={"system_instruction": system_instruction}
+            )
+            if response and response.text:
+                return {"status": "success", "prompt": response.text}
+        except Exception:
+            pass
 
-                <!-- Input: Detail Tambahan / Instruksi Khusus -->
-                <div class="mb-5">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Detail Tambahan / Instruksi Khusus</label>
-                    <textarea id="detailsInput" rows="3" placeholder="Masukkan konteks spesifik, warna utama, nama brand, target audiens, atau spesifikasi khusus..." class="w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition duration-150 resize-none"></textarea>
-                </div>
-            </div>
-
-            <!-- Submit Button -->
-            <button onclick="generatePrompt()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
-                <i class="fa-solid fa-bolt"></i> Generate Optimised Prompt
-            </button>
-        </section>
-
-        <!-- Right Column: Output Result -->
-        <section class="bg-[#131622] border border-gray-800 rounded-xl p-5 md:p-6 flex flex-col justify-between shadow-xl">
-            <div class="flex-1 flex flex-col">
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-800">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-terminal text-emerald-400"></i>
-                        <h2 class="font-semibold text-white">Output Result</h2>
-                    </div>
-                    <button onclick="copyToClipboard()" class="bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs px-3 py-1.5 rounded-md border border-gray-700 transition duration-150 flex items-center gap-1.5">
-                        <i class="fa-regular fa-copy"></i> Salin
-                    </button>
-                </div>
-
-                <!-- Output Display Textarea -->
-                <div class="flex-1 relative">
-                    <textarea id="outputResult" readonly placeholder="Hasil Master Prompt yang dioptimasi akan muncul di sini..." class="w-full h-full min-h-[400px] bg-[#0a0c12] border border-gray-800 rounded-lg p-4 font-mono text-sm text-emerald-400 placeholder-gray-600 focus:outline-none resize-none leading-relaxed"></textarea>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Client-Side JavaScript Logic -->
-    <script>
-        // Data relasi sub-gaya berdasarkan jenis desain
-        const subStyleOptions = {
-            "Spanduk": [
-                "Formal (Rapat, Resmi, dan Lain-lain)",
-                "Pengajian / Keagamaan",
-                "Pengumuman / Informasi Publik",
-                "Promosi Produk / Iklan Bisnis",
-                "Lainnya"
-            ],
-            "Poster": [
-                "Formal (Rapat, Resmi, dan Lain-lain)",
-                "Pengajian / Keagamaan",
-                "Pengumuman / Informasi Publik",
-                "Promosi Produk / Iklan Bisnis",
-                "Lainnya"
-            ],
-            "Stiker": [
-                "Formal / Pelabelan Produk",
-                "Pengajian / Komunitas",
-                "Pengumuman / Kampanye",
-                "Promosi / Merchandise Bisnis",
-                "Lainnya"
-            ],
-            "Kartu Nama": [
-                "Pengacara / Konsultan Hukum",
-                "Bengkel / Otomotif & Modifikasi",
-                "Perusahaan / Korporat Profesional",
-                "Kreatif / Freelancer",
-                "Lainnya"
-            ],
-            "Lainnya": [
-                "Umum / Kustom Bebas",
-                "Lainnya"
-            ]
-        };
-
-        // Data relasi preset ukuran berdasarkan jenis desain
-        const sizePresetOptions = {
-            "Spanduk": [
-                "2 x 1 meter",
-                "3 x 1 meter",
-                "4 x 1 meter",
-                "1 x 1 meter",
-                "Custom..."
-            ],
-            "Poster": [
-                "A4 (21 x 29.7 cm)",
-                "A3 (29.7 x 42 cm)",
-                "A2 (42 x 59.4 cm)",
-                "A1 (59.4 x 84.1 cm)",
-                "Custom..."
-            ],
-            "Stiker": [
-                "5 x 5 cm",
-                "7 x 7 cm",
-                "10 x 10 cm",
-                "A6 (10.5 x 14.8 cm)",
-                "Custom..."
-            ],
-            "Kartu Nama": [
-                "9 x 5.5 cm (Standar Indonesia)",
-                "9 x 5 cm (Standar Slim)",
-                "8.5 x 5.5 cm (Standar Eropa)",
-                "Custom..."
-            ],
-            "Lainnya": [
-                "1080 x 1080 px (Social Media Square)",
-                "1080 x 1920 px (Instagram Story/Reels)",
-                "1920 x 1080 px (Full HD Screen)",
-                "Custom..."
-            ]
-        };
-
-        // Fungsi memperbarui opsi Sub-Kategori
-        function updateSubStyles() {
-            const designType = document.getElementById('designTypeSelect').value;
-            const subStyleSelect = document.getElementById('subStyleSelect');
-            
-            subStyleSelect.innerHTML = "";
-            const options = subStyleOptions[designType] || ["Lainnya"];
-            
-            options.forEach(optionText => {
-                const opt = document.createElement('option');
-                opt.value = optionText;
-                opt.textContent = optionText;
-                subStyleSelect.appendChild(opt);
-            });
-        }
-
-        // Fungsi memperbarui opsi Ukuran
-        function updateSizes() {
-            const designType = document.getElementById('designTypeSelect').value;
-            const sizeSelect = document.getElementById('sizeSelect');
-            
-            sizeSelect.innerHTML = "";
-            const options = sizePresetOptions[designType] || ["Custom..."];
-            
-            options.forEach(optionText => {
-                const opt = document.createElement('option');
-                opt.value = optionText;
-                opt.textContent = optionText;
-                sizeSelect.appendChild(opt);
-            });
-
-            toggleCustomSizeInput();
-        }
-
-        // Tampilkan/sembunyikan input teks kustom jika opsi "Custom..." dipilih
-        function toggleCustomSizeInput() {
-            const sizeSelectValue = document.getElementById('sizeSelect').value;
-            const customContainer = document.getElementById('customSizeContainer');
-            
-            if (sizeSelectValue === "Custom...") {
-                customContainer.classList.remove('hidden');
-            } else {
-                customContainer.classList.add('hidden');
-            }
-        }
-
-        // Trigger perubahan Jenis Desain
-        function onDesignTypeChange() {
-            updateSubStyles();
-            updateSizes();
-        }
-
-        // Inisialisasi awal saat halaman selesai dimuat
-        document.addEventListener("DOMContentLoaded", () => {
-            onDesignTypeChange();
-        });
-
-        // Fungsi API request ke backend FastAPI
-        async function generatePrompt() {
-            const designType = document.getElementById('designTypeSelect').value;
-            const subStyle = document.getElementById('subStyleSelect').value;
-            const orientation = document.getElementById('orientationSelect').value;
-            
-            // Ambil ukuran dari preset atau input kustom
-            let selectedSize = document.getElementById('sizeSelect').value;
-            if (selectedSize === "Custom...") {
-                const customVal = document.getElementById('customSizeInput').value.trim();
-                selectedSize = customVal ? customVal : "Custom Size";
-            }
-
-            const tone = document.getElementById('toneSelect').value;
-            const targetAi = document.getElementById('targetAiSelect').value;
-            const details = document.getElementById('detailsInput').value.trim();
-            const output = document.getElementById('outputResult');
-            const btn = document.querySelector('button[onclick="generatePrompt()"]');
-
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Meracik Master Prompt...`;
-            output.value = "Sedang memproses prompt optimal...";
-
-            try {
-                const res = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        design_type: designType, 
-                        sub_style: subStyle, 
-                        orientation: orientation,
-                        size: selectedSize,
-                        tone: tone, 
-                        target_ai: targetAi, 
-                        details: details 
-                    })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    output.value = data.prompt;
-                } else {
-                    output.value = "Error: " + (data.detail || "Gagal memproses.");
-                }
-            } catch (err) {
-                output.value = "Error Koneksi: " + err.message;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
-            }
-        }
-
-        // Fungsi Salin ke Clipboard
-        function copyToClipboard() {
-            const output = document.getElementById('outputResult');
-            if (!output.value) return;
-            
-            output.select();
-            document.execCommand('copy');
-            alert('Prompt berhasil disalin ke clipboard!');
-        }
-    </script>
-</body>
-</html>
+    # Fallback lokal cerdas jika AI limit/offline
+    fallback_result = generate_local_fallback(
+        req.design_type, req.sub_style, req.orientation, req.size, req.tone, req.target_ai, req.details
+    )
+    return {"status": "success", "prompt": fallback_result}
