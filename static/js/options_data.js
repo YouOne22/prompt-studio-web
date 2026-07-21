@@ -1,6 +1,7 @@
 // Data Dropdown
 const subStyleOptions = {
     "Spanduk": [
+        "Template Polosan / Background Only (Tanpa Teks)",
         "Formal Modern / Executive (Minimalis)",
         "Formal Klasik Pemda (Konvensional)",
         "Pengajian / Keagamaan",
@@ -35,9 +36,17 @@ const formalFormFields = [
     { id: "notes", label: "Catatan Visual Khusus", placeholder: "Catatan warna/elemen...", type: "textarea" }
 ];
 
+const backgroundFormFields = [
+    { id: "bg_style", label: "Gaya Pattern / Geometric", placeholder: "e.g. Modern Swiss Diagonal, Wave Curved, Islamic Arabesque", type: "input" },
+    { id: "text_space", label: "Fokus Area Kosong (Negative Space)", placeholder: "e.g. Area tengah putih bersih untuk tempat teks utama", type: "input" },
+    { id: "notes", label: "Catatan Warna & Nuansa", placeholder: "e.g. Hijau Emerald, Aksen Emas Metalik, Krem Off-White", type: "textarea" }
+];
+
 const formSchemas = {
     "Spanduk_Formal Modern / Executive (Minimalis)": formalFormFields,
     "Spanduk_Formal Klasik Pemda (Konvensional)": formalFormFields,
+    "Spanduk_Template Polosan / Background Only (Tanpa Teks)": backgroundFormFields,
+    "Poster_Template Polosan / Background Only (Tanpa Teks)": backgroundFormFields,
     "Spanduk_Pengajian / Keagamaan": [
         { id: "title", label: "Judul Utama / Acara", placeholder: "e.g. TABLIGH AKBAR & HALAL BIHALAL", type: "input" },
         { id: "subtitle", label: "Tema / Sub-Judul", placeholder: "e.g. Menjalin Ukhuwah Islamiyah di Era Digital", type: "input" },
