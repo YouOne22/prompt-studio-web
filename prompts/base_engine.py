@@ -1,9 +1,8 @@
-# Modul Standar Anti-AI Look & Format Cetak
-
 NEGATIVE_PROMPT_RULES = (
     "DO NOT include generic 3D rendered plastic look, overly glossy textures, distorted floating text, "
     "unnatural AI glows, messy typography, extra hands/fingers, or chaotic color gradients. "
-    "Ensure clean 2D layout, crisp vector shapes, professional print grid, and legibility."
+    "STRICTLY DO NOT PRINT FORM FIELD LABELS or structural text headers like 'TEMA UTAMA:', 'TANGGAL & LOKASI:', "
+    "'NAMA AGENDA:', or 'CATATAN:' on the banner layout—render ONLY the exact literal content values."
 )
 
 def get_render_mode_instruction(render_mode: str) -> str:
@@ -33,8 +32,8 @@ def build_art_direction_block(design_type: str, sub_style: str, orientation: str
 - Safe Margin: Maintain 3-5 cm inner margin for eyelets/cutting lines.
 - Hierarchy: 
   1. Primary Focal Point (Main Title / Headline) - 40% visual area.
-  2. Secondary Focus (Speaker / Key Details / Sub-headline) - 30% area.
-  3. Action & Branding (Logos, Contact, Date, Location, CTA) - 30% area.
+  2. Secondary Focus (Sub-headline / Key Details) - 30% area.
+  3. Action & Branding (Logos, Contact, Date, Location) - 30% area.
 
 [ANTI-AI LOOK & QUALITY CONSTRAINTS]
 - {NEGATIVE_PROMPT_RULES}
