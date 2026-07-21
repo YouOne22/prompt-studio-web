@@ -1,11 +1,12 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
-@app.get("/")
+@app.get("/", response_class=FileResponse)
 def read_root():
-    return {"message": "Prompt Studio Web is Running!"}
+    return FileResponse("index.html")
 
-@app.get("/api/debug")
-def debug():
-    return {"status": "ok", "message": "Endpoint debug aktif!"}
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "app": "Prompt Studio Web"}
