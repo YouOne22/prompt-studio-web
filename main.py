@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -8,7 +8,6 @@ from prompts.builder import build_prompt
 
 app = FastAPI()
 
-# Mount folder static untuk menyajikan file JavaScript & CSS
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 api_key = os.getenv("GEMINI_API_KEY")
@@ -30,7 +29,7 @@ def read_root():
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "app": "Prompt Studio Modular"}
+    return {"status": "ok", "app": "Prompt Studio 3-Column Workspace"}
 
 @app.post("/api/generate")
 def generate_prompt(req: PromptRequest):
@@ -49,4 +48,3 @@ def generate_prompt(req: PromptRequest):
             pass
 
     return {"status": "success", "prompt": fallback_result}
-    
