@@ -81,26 +81,42 @@
     </main>
 
     <script>
-        function generatePrompt() {
+        async function generatePrompt() {
             const topic = document.getElementById('topicInput').value.trim();
             const tone = document.getElementById('toneSelect').value;
             const details = document.getElementById('detailsInput').value.trim();
+            const output = document.getElementById('outputResult');
+            const btn = document.querySelector('button[onclick="generatePrompt()"]');
 
             if (!topic) {
                 alert('Silakan isi Topik Utama terlebih dahulu!');
                 return;
             }
 
-            let promptResult = `[PERAN & TUJUAN]\nKamu adalah seorang ahli dibidangnya. Jalankan tugas berikut dengan pendekatan ${tone}.\n\n`;
-            promptResult += `[TUGAS UTAMA]\n${topic}\n\n`;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Meracik Prompt dengan AI...`;
+            output.value = "Sedang menghubungkan ke Gemini AI untuk meracik Master Prompt...";
 
-            if (details) {
-                promptResult += `[KONTEKS & KRITERIA KHUSUS]\n${details}\n\n`;
+            try {
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, tone, details })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    output.value = data.prompt;
+                } else {
+                    output.value = "Error: " + (data.detail || "Gagal memproses permintaan.");
+                }
+            } catch (err) {
+                output.value = "Error Koneksi: " + err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
             }
-
-            promptResult += `[FORMAT OUTPUT]\nBerikan jawaban yang terstruktur, jelas, dan mudah dipahami.`;
-
-            document.getElementById('outputResult').value = promptResult;
         }
 
         function copyToClipboard() {
