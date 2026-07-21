@@ -46,8 +46,8 @@ def generate_prompt(req: PromptRequest):
         f"Detail/Konteks Khusus: {req.details if req.details else 'Tidak ada'}"
     )
 
-    # Menggunakan endpoint v1 Stable
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+    # URL Endpoint v1 tanpa prefiks 'models/' yang keliru
+    url = f"https://generativelanguage.googleapis.com/v1/gemini-1.5-flash:generateContent?key={api_key}"
 
     payload = {
         "system_instruction": {
