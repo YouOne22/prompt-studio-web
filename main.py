@@ -1,14 +1,13 @@
 import os
-import json
-import urllib.request
-import urllib.error
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from google import genai
 
 app = FastAPI()
 
 api_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key) if api_key else None
 
 class PromptRequest(BaseModel):
     topic: str
@@ -25,7 +24,7 @@ def health_check():
 
 @app.post("/api/generate")
 def generate_prompt(req: PromptRequest):
-    if not api_key:
+    if not client:
         raise HTTPException(
             status_code=500, 
             detail="GEMINI_API_KEY belum terdeteksi di Railway."
@@ -46,38 +45,18 @@ def generate_prompt(req: PromptRequest):
         f"Detail/Konteks Khusus: {req.details if req.details else 'Tidak ada'}"
     )
 
-    # URL Endpoint v1 tanpa prefiks 'models/' yang keliru
-    url = f"https://generativelanguage.googleapis.com/v1/gemini-1.5-flash:generateContent?key={api_key}"
-
-    payload = {
-        "system_instruction": {
-            "parts": [{"text": system_instruction}]
-        },
-        "contents": [
-            {
-                "parts": [{"text": user_content}]
-            }
-        ]
-    }
-
-    headers = {"Content-Type": "application/json"}
-
     try:
-        data = json.dumps(payload).encode("utf-8")
-        request = urllib.request.Request(url, data=data, headers=headers, method="POST")
-        
-        with urllib.request.urlopen(request) as response:
-            res_body = json.loads(response.read().decode("utf-8"))
-            generated_text = res_body["candidates"][0]["content"]["parts"][0]["text"]
-            return {"status": "success", "prompt": generated_text}
-
-    except urllib.error.HTTPError as e:
-        error_response = e.read().decode("utf-8")
-        if e.code == 429:
-            raise HTTPException(
-                status_code=429,
-                detail="Antrean AI sedang penuh (Rate Limit). Tunggu sekitar 30 detik lalu coba lagi."
-            )
-        raise HTTPException(status_code=e.code, detail=f"Google API Error ({e.code}): {error_response}")
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=user_content,
+            config={"system_instruction": system_instruction}
+        )
+        return {"status": "success", "prompt": response.text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gagal memproses request: {str(e)}")
+        err_msg = str(e)
+        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+            raise HTTPException(
+                status_code=429, 
+                detail="Batas kuota gratis tercapai sesaat. Tunggu 30 detik lalu coba lagi ya."
+            )
+        raise HTTPException(status_code=500, detail=f"Gagal generate dari AI: {err_msg}")
