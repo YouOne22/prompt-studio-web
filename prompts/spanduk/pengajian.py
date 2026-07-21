@@ -4,7 +4,7 @@ def get_spanduk_pengajian_prompt(req) -> str:
     art_block = build_art_direction_block(
         req.design_type, req.sub_style, req.orientation, req.size, req.tone, req.render_mode
     )
-    extra = f"\n- Specific Event Details: {req.details}" if req.details else ""
+    extra = f"\n- Detailed Content Information:\n{req.details}" if req.details else ""
 
     return f"""
 [MASTER BRIEF: SPANDUK PENGAJIAN / KEAGAMAAN]
