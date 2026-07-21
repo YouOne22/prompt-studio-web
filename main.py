@@ -48,11 +48,17 @@ def generate_prompt(req: PromptRequest):
     )
 
     try:
+        # Memaksa penggunaan API v1 Stable agar tidak 404
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name="models/gemini-1.5-flash",
             system_instruction=system_instruction
         )
-        response = model.generate_content(user_content)
+        
+        # Override client options ke v1
+        response = model.generate_content(
+            user_content,
+            request_options={"api_version": "v1"}
+        )
         return {"status": "success", "prompt": response.text}
     except Exception as e:
         err_msg = str(e)
