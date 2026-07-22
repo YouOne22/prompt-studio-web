@@ -38,7 +38,7 @@ def generate_prompt(req: PromptRequest):
     if client:
         try:
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-Imagen-3",
                 contents=user_content,
                 config={"system_instruction": system_instruction}
             )
