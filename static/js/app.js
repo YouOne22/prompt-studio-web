@@ -1,12 +1,54 @@
 // ==========================================================================
-// CONFIGURATION
+// CONFIGURATION & GLOBAL STATE
 // ==========================================================================
 const STORAGE_KEY = "prompt_studio_saved_briefs";
+let currentBase64Image = null; // Menyimpan data gambar referensi dalam format base64
 
 document.addEventListener("DOMContentLoaded", function () {
     onSidebarChange();
 });
 
+// ==========================================================================
+// MANAJEMEN UPLOAD & PREVIEW GAMBAR REFERENSI (VISION)
+// ==========================================================================
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        alert("Silakan pilih file gambar yang valid (PNG, JPG, WEBP).");
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // Batas 5MB
+        alert("Ukuran file gambar terlalu besar (Maksimal 5MB).");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        currentBase64Image = e.target.result;
+        document.getElementById("imagePreview").src = currentBase64Image;
+        document.getElementById("imageFileName").textContent = file.name;
+        document.getElementById("uploadPlaceholder").classList.add("hidden");
+        document.getElementById("imagePreviewContainer").classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeImage(event) {
+    if (event) event.stopPropagation();
+    currentBase64Image = null;
+    document.getElementById("imageInput").value = "";
+    document.getElementById("imagePreview").src = "";
+    document.getElementById("imageFileName").textContent = "";
+    document.getElementById("uploadPlaceholder").classList.remove("hidden");
+    document.getElementById("imagePreviewContainer").classList.add("hidden");
+}
+
+// ==========================================================================
+// MANAJEMEN FORM & SIDEBAR DINAMIS
+// ==========================================================================
 function onSidebarChange() {
     const designType = document.getElementById("designTypeSelect").value;
     const subStyleSelect = document.getElementById("subStyleSelect");
@@ -84,7 +126,7 @@ function toggleCustomSizeInput() {
 }
 
 /* ==========================================================================
-   HYBRID GENERATOR (OPENROUTER API PRIMARY -> LOCAL FALLBACK)
+   HYBRID GENERATOR (OPENROUTER/GROQ VISION API -> LOCAL FALLBACK)
    ========================================================================== */
 
 async function generatePrompt() {
@@ -121,6 +163,10 @@ async function generatePrompt() {
         : "- (Tidak ada detail konten tambahan yang diisi. JANGAN buatkan elemen teks tambahan).";
 
     // 1. KONTRAK META-PROMPT LOKAL
+    const imageInstruction = currentBase64Image 
+        ? "\n6. GAMBAR REFERENSI DISERTAKAN: Analisis elemen visual, warna, objek, dan gaya dari gambar referensi terlampir. Integrasikan karakteristik visual tersebut ke dalam Master Prompt secara harmonis."
+        : "";
+
     const metaPromptText = `Anda adalah seorang Senior Art Director & Expert AI Prompt Engineer.
 
 Tugas Anda adalah menerjemahkan brief desain cetak/grafis di bawah ini menjadi 1 MASTER PROMPT GAMBAR (dalam Bahasa Inggris) yang sangat detail, profesional, dan siap digunakan pada generator AI [${targetAi}].
@@ -146,16 +192,17 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 2. Minta AI generator gambar untuk merender JUDUL UTAMA & SUB-JUDUL secara sangat jelas di dalam tanda petik ganda.
 3. TATA LETAK VERTIKAL: Informasi detail acara (seperti Tanggal, Lokasi, Kontak, dll.) HARUS disusun secara VERTIKAL BERTUMPUK (stacked top-to-bottom / baris terpisah satu per satu), BUKAN berdampingan secara horizontal.
 4. ATURAN KETAT HAPUS DATA KOSONG: Abaikan dan HAPUS SELURUHNYA elemen atau data yang kosong/tidak diisi di dalam brief. Jangan membuat teks dummy atau placeholder untuk data yang tidak ada.
-5. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.`;
+5. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.${imageInstruction}`;
 
     // Visual Loading State
     generateBtn.disabled = true;
-    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan OpenRouter...`;
-    outputResult.value = "Sedang menghubungi AI Prompter Builder untuk meracik prompt profesional...";
+    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan Groq Vision API...`;
+    outputResult.value = currentBase64Image 
+        ? "Sedang Menganalisis Gambar Referensi & Meracik Prompt..." 
+        : "Sedang menghubungi AI Prompter Builder untuk meracik prompt profesional...";
 
     // 2. EKSEKUSI HYBRID SYSTEM (GROQ API)
     try {
-        // Ambil API Key Groq dari browser
         let apiKey = localStorage.getItem("groq_api_key") || "";
 
         if (!apiKey) {
@@ -170,6 +217,22 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             throw new Error("API Key Groq tidak diisi.");
         }
 
+        // Penentuan Model: Gunakan Model Vision jika ada gambar referensi
+        const selectedModel = currentBase64Image 
+            ? "llama-3.2-11b-vision-preview" 
+            : "llama-3.3-70b-versatile";
+
+        // Penyiapan Payload User Content (Support Text & Multimodal Image)
+        let userMessageContent;
+        if (currentBase64Image) {
+            userMessageContent = [
+                { type: "text", text: metaPromptText },
+                { type: "image_url", image_url: { url: currentBase64Image } }
+            ];
+        } else {
+            userMessageContent = metaPromptText;
+        }
+
         // Panggilan ke API Groq
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -178,15 +241,15 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile", // Model super cerdas dan cepat di Groq
+                model: selectedModel,
                 messages: [
                     {
                         role: "system",
-                        content: "You are a professional Art Director. Convert design briefs into single markdown code block image prompts in English.\n\nCRITICAL RULES:\n1. OMIT MISSING DATA: Completely exclude and omit any design elements, fields, or details that are left empty or omitted in the brief. Do NOT invent placeholders or fake text for empty fields.\n2. VERTICAL LAYOUT: For event info (date, location, contact, parent names, etc.), explicitly instruct a vertically stacked layout (top-to-bottom, line-by-line / stacked blocks) instead of placing them side-by-side in a horizontal row."
+                        content: "You are a professional Art Director. Convert design briefs (and reference image if attached) into a single markdown code block image prompt in English.\n\nCRITICAL RULES:\n1. OMIT MISSING DATA: Completely exclude and omit any design elements, fields, or details that are left empty or omitted in the brief. Do NOT invent placeholders or fake text for empty fields.\n2. VERTICAL LAYOUT: For event info (date, location, contact, parent names, etc.), explicitly instruct a vertically stacked layout (top-to-bottom, line-by-line / stacked blocks) instead of placing them side-by-side in a horizontal row."
                     },
                     {
                         role: "user",
-                        content: metaPromptText
+                        content: userMessageContent
                     }
                 ],
                 temperature: 0.7,
@@ -196,7 +259,6 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
         if (!response.ok) {
             const errJson = await response.json().catch(() => ({}));
-            // Jika Key salah / invalid, hapus dari storage browser
             if (response.status === 401) {
                 localStorage.removeItem("groq_api_key");
             }
@@ -216,7 +278,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         console.warn("Panggilan Groq API gagal/terkendala. Berpindah ke Fallback Lokal:", error.message);
 
         // FALLBACK AUTOMATIC: Jika API gagal/kendala sinyal, tampilkan Meta-Prompt lokal!
-        outputResult.value = `/* [SISTEM HYBRID: API Groq Offline / Perlu Key Baru] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT */\n\n` + metaPromptText;
+        outputResult.value = `/* [SISTEM HYBRID: API Groq Offline / Perlu Key Baru] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT / Claude */\n\n` + metaPromptText;
     } finally {
         generateBtn.disabled = false;
         generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
@@ -242,7 +304,7 @@ function copyToClipboard() {
 function saveCurrentBrief() {
     const outputResult = document.getElementById("outputResult").value;
 
-    if (!outputResult || outputResult.includes("Menghubungkan OpenRouter")) {
+    if (!outputResult || outputResult.includes("Menghubungkan Groq Vision API")) {
         alert("Belum ada prompt hasil generate yang bisa disimpan!");
         return;
     }
@@ -284,6 +346,7 @@ function saveCurrentBrief() {
             targetAi
         },
         dynamicFields,
+        imageRef: currentBase64Image, // Menyimpan gambar referensi jika ada
         outputPrompt: outputResult
     };
 
@@ -325,7 +388,10 @@ function renderHistory() {
     historyList.innerHTML = savedBriefs.map(brief => `
         <div class="bg-[#1a1d2e] border border-gray-800 hover:border-gray-700 rounded-lg p-3 flex items-center justify-between transition gap-2">
             <div class="space-y-1 overflow-hidden">
-                <div class="text-xs font-bold text-white truncate">${brief.title}</div>
+                <div class="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                    ${brief.imageRef ? '<i class="fa-solid fa-image text-indigo-400 text-[11px]"></i>' : ''}
+                    ${brief.title}
+                </div>
                 <div class="text-[10px] text-gray-400 flex items-center gap-1.5 flex-wrap">
                     <span class="bg-indigo-900/60 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-700/50">${brief.params.designType}</span>
                     <span class="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded border border-gray-700">${brief.params.targetAi}</span>
@@ -365,7 +431,18 @@ function loadBrief(id) {
     document.getElementById("toneSelect").value = brief.params.tone;
     document.getElementById("targetAiSelect").value = brief.params.targetAi;
 
-    // 3. Kembalikan Dynamic Fields
+    // 3. Kembalikan Gambar Referensi (jika ada)
+    if (brief.imageRef) {
+        currentBase64Image = brief.imageRef;
+        document.getElementById("imagePreview").src = currentBase64Image;
+        document.getElementById("imageFileName").textContent = "Gambar Referensi Tersimpan";
+        document.getElementById("uploadPlaceholder").classList.add("hidden");
+        document.getElementById("imagePreviewContainer").classList.remove("hidden");
+    } else {
+        removeImage();
+    }
+
+    // 4. Kembalikan Dynamic Fields
     if (brief.dynamicFields) {
         for (const [fieldId, val] of Object.entries(brief.dynamicFields)) {
             const inputElem = document.getElementById(fieldId);
@@ -375,7 +452,7 @@ function loadBrief(id) {
         }
     }
 
-    // 4. Restore Output
+    // 5. Restore Output
     document.getElementById("outputResult").value = brief.outputPrompt || "";
 
     closeHistoryModal();
