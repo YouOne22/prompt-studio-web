@@ -2,22 +2,27 @@
 // CONFIGURATION & GLOBAL STATE
 // ==========================================================================
 const STORAGE_KEY = "prompt_studio_saved_briefs";
-let currentBase64Image = null; // Menyimpan data gambar referensi dalam format base64
+let currentBase64Image = null; // Menyimpan data gambar terkompresi dalam format base64
 
-// Initial Setup saat DOM selesai di-load
 document.addEventListener("DOMContentLoaded", function () {
-    // 1. Restore API Key dari LocalStorage ke Input Header (jika ada)
+    // 1. Restore API Key dari LocalStorage ke Input Header jika ada
     const savedKey = localStorage.getItem("groq_api_key");
     const keyInput = document.getElementById("groqApiKeyInput");
     if (savedKey && keyInput) {
         keyInput.value = savedKey;
     }
 
-    // 2. Inisialisasi Tampilan Sidebar & Form Pertama Kali
+    // 2. Event Listener untuk Otomatis Menyimpan Key saat Ditulis di Header
+    if (keyInput) {
+        keyInput.addEventListener("input", function () {
+            saveApiKey(this.value);
+        });
+    }
+
+    // 3. Inisialisasi Tampilan Sidebar & Form Pertama Kali
     onSidebarChange();
 });
 
-// Fungsi simpan API Key secara langsung dari header input
 function saveApiKey(val) {
     if (val && val.trim()) {
         localStorage.setItem("groq_api_key", val.trim());
@@ -27,9 +32,43 @@ function saveApiKey(val) {
 }
 
 // ==========================================================================
+// HELPER: KOMPRESI GAMBAR BASE64 UNTUK VISION API
+// ==========================================================================
+function compressImageBase64(base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth || height > maxHeight) {
+                if (width > height) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                } else {
+                    width = Math.round((width * maxHeight) / height);
+                    height = maxHeight;
+                }
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Export ke JPEG dengan kompresi kualitas
+            resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = () => resolve(base64Str); // Fallback ke original jika gagal
+    });
+}
+
+// ==========================================================================
 // MANAJEMEN UPLOAD & PREVIEW GAMBAR REFERENSI (VISION)
 // ==========================================================================
-function handleImageUpload(event) {
+async function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -38,14 +77,17 @@ function handleImageUpload(event) {
         return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // Batas 5MB
-        alert("Ukuran file gambar terlalu besar (Maksimal 5MB).");
+    if (file.size > 10 * 1024 * 1024) { // Batas 10MB
+        alert("Ukuran file gambar terlalu besar (Maksimal 10MB).");
         return;
     }
 
     const reader = new FileReader();
-    reader.onload = function (e) {
-        currentBase64Image = e.target.result;
+    reader.onload = async function (e) {
+        const rawBase64 = e.target.result;
+        // Kompres gambar secara otomatis agar payload aman di Groq Vision API
+        currentBase64Image = await compressImageBase64(rawBase64);
+
         document.getElementById("imagePreview").src = currentBase64Image;
         document.getElementById("imageFileName").textContent = file.name;
         document.getElementById("uploadPlaceholder").classList.add("hidden");
@@ -77,12 +119,11 @@ function onSidebarChange() {
     const subStyleSelect = document.getElementById("subStyleSelect");
     const sizeSelect = document.getElementById("sizeSelect");
 
-    // Fallback jika OPTIONS_DATA belum/tidak terdefinisi
     const options = (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA[designType]) 
         ? OPTIONS_DATA[designType] 
         : (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA["Lainnya"]) 
             ? OPTIONS_DATA["Lainnya"] 
-            : { subStyles: ["Umum / Standard"], sizes: ["A4", "Kustom"] };
+            : { subStyles: ["Umum / Standard"], sizes: ["A3", "Kustom"] };
 
     // Populate Sub-Style
     subStyleSelect.innerHTML = "";
@@ -114,13 +155,13 @@ function onSubStyleChange() {
     const container = document.getElementById("dynamicFormContainer");
     if (!container) return;
 
-    // Default fields jika OPTIONS_DATA tidak menyediakan fields khusus
     const defaultFields = [
-        { id: "main_title", label: `Judul Utama ${designType}`, placeholder: "Contoh: OJO DUMEH FEST / WARUNG BERKAH", type: "input" },
+        { id: "main_title", label: `Judul Utama ${designType}`, placeholder: "Contoh: OJO DUMEH FEST", type: "input" },
         { id: "subtitle", label: "Sub-Judul / Tema", placeholder: "Contoh: PENTAS SENI PERTUNJUKAN RAKYAT", type: "input" },
         { id: "highlights", label: "Isi Ringkas / Highlights", placeholder: "Contoh: Daftar Bintang Tamu / Menu Utama", type: "textarea" },
-        { id: "datetime", label: "Waktu & Lokasi", placeholder: "Contoh: Minggu, 2 Agustus | Lapangan Desa Kemitir", type: "input" },
-        { id: "cta", label: "Call to Action / Contact", placeholder: "Contoh: HTM Gratis | Hub: 0812-xxxx", type: "input" }
+        { id: "datetime", label: "Waktu, Tanggal & Lokasi", placeholder: "Contoh: Minggu, 2 Agustus 2026 | Lapangan Desa Kemitir", type: "input" },
+        { id: "cta", label: "Call to Action / Registrasi", placeholder: "Contoh: HTM Gratis | Hub: 0812-xxxx", type: "input" },
+        { id: "organizer", label: "Penyelenggara & Sponsor", placeholder: "Contoh: Pemdes Kemitir", type: "input" }
     ];
 
     const fields = (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA[designType]?.fields) 
@@ -171,7 +212,7 @@ function toggleCustomSizeInput() {
 }
 
 // ==========================================================================
-// HYBRID GENERATOR (GROQ VISION API -> LOCAL FALLBACK)
+// GENERATOR ENGINE (GROQ API WITH TRANSPARENT ERROR HANDLING)
 // ==========================================================================
 async function generatePrompt() {
     const generateBtn = document.getElementById("generateBtn");
@@ -186,11 +227,11 @@ async function generatePrompt() {
 
     let size = document.getElementById("sizeSelect").value;
     if (size === "Kustom") {
-        const customSize = document.getElementById("customSizeInput").value.trim();
+        const customSize = document.getElementById("customSizeInput")?.value.trim();
         size = customSize !== "" ? customSize : "Kustom (Ukuran Tidak Ditentukan)";
     }
 
-    // Mengumpulkan detail dari form dinamis (Hanya menyertakan input yang terisi)
+    // Mengumpulkan input dinamis terisi
     const dynamicInputs = document.querySelectorAll("#dynamicFormContainer [id^='dynamic_']");
     let detailsArr = [];
 
@@ -204,9 +245,8 @@ async function generatePrompt() {
 
     const detailsText = detailsArr.length > 0 
         ? detailsArr.join("\n") 
-        : "- (Tidak ada detail konten tambahan yang diisi. JANGAN buatkan elemen teks tambahan).";
+        : "- (Tidak ada detail konten tambahan yang diisi).";
 
-    // KONTRAK META-PROMPT
     const imageInstruction = currentBase64Image 
         ? "\n6. GAMBAR REFERENSI DISERTAKAN: Analisis elemen visual, warna, objek, dan gaya dari gambar referensi terlampir. Integrasikan karakteristik visual tersebut ke dalam Master Prompt secara harmonis."
         : "";
@@ -238,22 +278,22 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 4. ATURAN KETAT HAPUS DATA KOSONG: Abaikan dan HAPUS SELURUHNYA elemen atau data yang kosong/tidak diisi di dalam brief. Jangan membuat teks dummy atau placeholder untuk data yang tidak ada.
 5. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.${imageInstruction}`;
 
-    // Visual Loading State
+    // Update UI State Loading
     generateBtn.disabled = true;
     generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan Groq Vision API...`;
     outputResult.value = currentBase64Image 
         ? "Sedang Menganalisis Gambar Referensi & Meracik Prompt..." 
-        : "Sedang menghubungi AI Prompter Builder untuk meracik prompt profesional...";
+        : "Sedang menghubungi AI Prompter Builder...";
 
     try {
-        // Cek API Key dari Input Header atau LocalStorage
+        // Ambil API Key dari Input Header atau LocalStorage
         let apiKey = document.getElementById("groqApiKeyInput")?.value.trim() || localStorage.getItem("groq_api_key") || "";
 
         if (!apiKey) {
             apiKey = prompt("Masukkan Groq API Key Anda (gsk_...):");
             if (apiKey) {
                 apiKey = apiKey.trim();
-                localStorage.setItem("groq_api_key", apiKey);
+                saveApiKey(apiKey);
                 if (document.getElementById("groqApiKeyInput")) {
                     document.getElementById("groqApiKeyInput").value = apiKey;
                 }
@@ -261,15 +301,14 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         }
 
         if (!apiKey) {
-            throw new Error("API Key Groq tidak diisi.");
+            throw new Error("API Key Groq kosong atau belum diisi.");
         }
 
-        // Penentuan Model: Gunakan Model Vision jika ada gambar referensi
+        // Model Selection: Gunakan Llama 3.2 Vision jika ada gambar referensi
         const selectedModel = currentBase64Image 
             ? "llama-3.2-11b-vision-preview" 
             : "llama-3.3-70b-versatile";
 
-        // Penyiapan Payload User Content (Support Text & Multimodal Image)
         let userMessageContent;
         if (currentBase64Image) {
             userMessageContent = [
@@ -280,7 +319,6 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             userMessageContent = metaPromptText;
         }
 
-        // Panggilan ke API Groq
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -306,10 +344,11 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
         if (!response.ok) {
             const errJson = await response.json().catch(() => ({}));
+            const errMsg = errJson.error?.message || `HTTP status ${response.status}`;
             if (response.status === 401) {
                 localStorage.removeItem("groq_api_key");
             }
-            throw new Error(errJson.error?.message || `HTTP status ${response.status}`);
+            throw new Error(`[GROQ API ERROR ${response.status}]: ${errMsg}`);
         }
 
         const data = await response.json();
@@ -318,14 +357,14 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         if (aiResult) {
             outputResult.value = aiResult;
         } else {
-            throw new Error("Respons Groq kosong.");
+            throw new Error("Groq merespons dengan konten kosong.");
         }
 
     } catch (error) {
-        console.warn("Panggilan Groq API gagal/terkendala. Berpindah ke Fallback Lokal:", error.message);
+        console.error("Gagal melakukan permintaan ke Groq API:", error);
 
-        // FALLBACK AUTOMATIC: Tampilkan Meta-Prompt lokal jika API gagal/offline
-        outputResult.value = `/* [SISTEM HYBRID: API Groq Offline / Perlu Key Baru] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT / Claude */\n\n` + metaPromptText;
+        // Menampilkan pesan error transparan + Meta Prompt jika terjadi kegagalan API
+        outputResult.value = `/* [ERROR GROQ API: ${error.message}] */\n\n/* METAPROMPT LOKAL (Dapat langsung di-copy ke ChatGPT / Claude): */\n\n` + metaPromptText;
     } finally {
         generateBtn.disabled = false;
         generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
@@ -341,7 +380,7 @@ function copyToClipboard() {
 
     navigator.clipboard.writeText(outputResult.value).then(() => {
         alert("Prompt berhasil disalin ke clipboard!");
-    }).catch(err => {
+    }).catch(() => {
         outputResult.select();
         document.execCommand("copy");
         alert("Prompt berhasil disalin!");
@@ -471,11 +510,9 @@ function loadBrief(id) {
 
     if (!brief) return;
 
-    // 1. Set Kategori Utama & Re-render Form
     document.getElementById("designTypeSelect").value = brief.params.designType;
     onSidebarChange();
 
-    // 2. Restore Sub-style & Parameter Lainnya
     document.getElementById("subStyleSelect").value = brief.params.subStyle;
     document.getElementById("orientationSelect").value = brief.params.orientation;
     document.getElementById("sizeSelect").value = brief.params.size;
@@ -488,7 +525,6 @@ function loadBrief(id) {
     document.getElementById("toneSelect").value = brief.params.tone;
     document.getElementById("targetAiSelect").value = brief.params.targetAi;
 
-    // 3. Restore Gambar Referensi
     if (brief.imageRef) {
         currentBase64Image = brief.imageRef;
         document.getElementById("imagePreview").src = currentBase64Image;
@@ -499,7 +535,6 @@ function loadBrief(id) {
         removeImage();
     }
 
-    // 4. Restore Dynamic Fields
     if (brief.dynamicFields) {
         for (const [fieldId, val] of Object.entries(brief.dynamicFields)) {
             const inputElem = document.getElementById(fieldId);
@@ -509,7 +544,6 @@ function loadBrief(id) {
         }
     }
 
-    // 5. Restore Output Text
     document.getElementById("outputResult").value = brief.outputPrompt || "";
 
     closeHistoryModal();
