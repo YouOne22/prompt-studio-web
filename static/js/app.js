@@ -1,102 +1,65 @@
-function updateSubStyles() {
-    const designType = document.getElementById('designTypeSelect').value;
-    const subStyleSelect = document.getElementById('subStyleSelect');
+document.addEventListener("DOMContentLoaded", function () {
+    onSidebarChange();
+});
+
+function onSidebarChange() {
+    const designType = document.getElementById("designTypeSelect").value;
+    const subStyleSelect = document.getElementById("subStyleSelect");
+    const sizeSelect = document.getElementById("sizeSelect");
+
+    const data = OPTIONS_DATA[designType] || OPTIONS_DATA["Lainnya"];
+
+    // Populate Sub-Style
     subStyleSelect.innerHTML = "";
-    (subStyleOptions[designType] || ["Lainnya"]).forEach(opt => {
-        subStyleSelect.add(new Option(opt, opt));
+    data.subStyles.forEach(style => {
+        const opt = document.createElement("option");
+        opt.value = style;
+        opt.textContent = style;
+        subStyleSelect.appendChild(opt);
     });
-}
 
-function updateSizes() {
-    const designType = document.getElementById('designTypeSelect').value;
-    const sizeSelect = document.getElementById('sizeSelect');
+    // Populate Size Presets
     sizeSelect.innerHTML = "";
-    (sizePresetOptions[designType] || ["Custom..."]).forEach(opt => {
-        sizeSelect.add(new Option(opt, opt));
+    data.sizes.forEach(sz => {
+        const opt = document.createElement("option");
+        opt.value = sz;
+        opt.textContent = sz;
+        sizeSelect.appendChild(opt);
     });
+
     toggleCustomSizeInput();
+    onSubStyleChange();
 }
 
-function toggleCustomSizeInput() {
-    const isCustom = document.getElementById('sizeSelect').value === "Custom...";
-    document.getElementById('customSizeContainer').classList.toggle('hidden', !isCustom);
-}
+function onSubStyleChange() {
+    const designType = document.getElementById("designTypeSelect").value;
+    const data = OPTIONS_DATA[designType] || OPTIONS_DATA["Lainnya"];
+    const container = document.getElementById("dynamicFormContainer");
 
-// Fungsi memasukkan warna saat chip diklik
-function applyColorPalette(colorValue, btnEl) {
-    const notesInput = document.getElementById('field_notes');
-    if (notesInput) {
-        notesInput.value = colorValue;
-    }
-
-    // Highlight tombol warna yang aktif
-    document.querySelectorAll('.color-chip').forEach(btn => {
-        btn.classList.remove('bg-indigo-600', 'border-indigo-400', 'text-white');
-        btn.classList.add('bg-[#1a1d2e]', 'border-gray-700', 'text-gray-300');
-    });
-
-    btnEl.classList.remove('bg-[#1a1d2e]', 'border-gray-700', 'text-gray-300');
-    btnEl.classList.add('bg-indigo-600', 'border-indigo-400', 'text-white');
-}
-
-// Render Form Dinamis + Quick Color Chips
-function renderDynamicForm() {
-    const designType = document.getElementById('designTypeSelect').value;
-    const subStyle = document.getElementById('subStyleSelect').value;
-    const key = `${designType}_${subStyle}`;
-    const fields = formSchemas[key] || formSchemas["DEFAULT"];
-    
-    const container = document.getElementById('dynamicFormContainer');
     container.innerHTML = "";
 
-    fields.forEach(field => {
-        const wrapper = document.createElement('div');
-        wrapper.className = "mb-4";
+    data.fields.forEach(field => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "mb-3.5";
 
-        const label = document.createElement('label');
-        label.className = "block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2";
-        label.innerText = field.label;
-
-        // Jika ini field catatan, sisipkan Quick Color Palette Chips di atasnya
-        if (field.id === "notes") {
-            const colorContainer = document.createElement('div');
-            colorContainer.className = "mb-2.5";
-            
-            const colorLabel = document.createElement('span');
-            colorLabel.className = "block text-[11px] text-gray-400 mb-1.5 font-medium";
-            colorLabel.innerText = "⚡ Quick Color Palette (Klik untuk warna instan):";
-            colorContainer.appendChild(colorLabel);
-
-            const chipWrapper = document.createElement('div');
-            chipWrapper.className = "flex flex-wrap gap-1.5";
-
-            colorPalettes.forEach(palette => {
-                const chip = document.createElement('button');
-                chip.type = "button";
-                chip.className = "color-chip text-[11px] px-2.5 py-1 rounded-md border border-gray-700 bg-[#1a1d2e] text-gray-300 hover:border-indigo-500 hover:text-white transition cursor-pointer";
-                chip.innerText = palette.label;
-                chip.onclick = () => applyColorPalette(palette.value, chip);
-                chipWrapper.appendChild(chip);
-            });
-
-            colorContainer.appendChild(chipWrapper);
-            wrapper.appendChild(colorContainer);
-        }
+        const label = document.createElement("label");
+        label.className = "block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5";
+        label.textContent = field.label;
 
         let input;
         if (field.type === "textarea") {
-            input = document.createElement('textarea');
+            input = document.createElement("textarea");
             input.rows = 3;
-            input.className = "w-full bg-[#0d0f17] border border-gray-700 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none";
+            input.className = "w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 resize-none";
         } else {
-            input = document.createElement('input');
+            input = document.createElement("input");
             input.type = "text";
-            input.className = "w-full bg-[#0d0f17] border border-gray-700 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500";
+            input.className = "w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500";
         }
 
-        input.id = `field_${field.id}`;
-        input.dataset.label = field.label;
+        input.id = `dynamic_${field.id}`;
         input.placeholder = field.placeholder;
+        input.setAttribute("data-label", field.label);
 
         wrapper.appendChild(label);
         wrapper.appendChild(input);
@@ -104,78 +67,96 @@ function renderDynamicForm() {
     });
 }
 
-function onSidebarChange() {
-    updateSubStyles();
-    updateSizes();
-    renderDynamicForm();
-}
+function toggleCustomSizeInput() {
+    const sizeSelect = document.getElementById("sizeSelect");
+    const container = document.getElementById("customSizeContainer");
 
-function onSubStyleChange() {
-    renderDynamicForm();
+    if (sizeSelect.value === "Kustom") {
+        container.classList.remove("hidden");
+    } else {
+        container.classList.add("hidden");
+    }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    onSidebarChange();
-});
 
 async function generatePrompt() {
-    const designType = document.getElementById('designTypeSelect').value;
-    const subStyle = document.getElementById('subStyleSelect').value;
-    const orientation = document.getElementById('orientationSelect').value;
-    let selectedSize = document.getElementById('sizeSelect').value;
-    if (selectedSize === "Custom...") {
-        selectedSize = document.getElementById('customSizeInput').value.trim() || "Custom Size";
-    }
-    const renderMode = document.getElementById('renderModeSelect').value;
-    const tone = document.getElementById('toneSelect').value;
-    const targetAi = document.getElementById('targetAiSelect').value;
+    const generateBtn = document.getElementById("generateBtn");
+    const outputResult = document.getElementById("outputResult");
 
-    const dynamicFields = document.querySelectorAll('#dynamicFormContainer [id^="field_"]');
-    let collectedDetails = [];
-    dynamicFields.forEach(field => {
-        if (field.value.trim() !== "") {
-            collectedDetails.push(`${field.dataset.label}: ${field.value.trim()}`);
+    const designType = document.getElementById("designTypeSelect").value;
+    const subStyle = document.getElementById("subStyleSelect").value;
+    const orientation = document.getElementById("orientationSelect").value;
+    const renderMode = document.getElementById("renderModeSelect").value;
+    const tone = document.getElementById("toneSelect").value;
+    const targetAi = document.getElementById("targetAiSelect").value;
+
+    let size = document.getElementById("sizeSelect").value;
+    if (size === "Kustom") {
+        const customSize = document.getElementById("customSizeInput").value.trim();
+        size = customSize !== "" ? customSize : "Kustom (Ukuran Tidak Ditentukan)";
+    }
+
+    // Mengumpulkan detail dari form dinamis
+    const dynamicInputs = document.querySelectorAll("#dynamicFormContainer [id^='dynamic_']");
+    let detailsArr = [];
+
+    dynamicInputs.forEach(input => {
+        const val = input.value.trim();
+        const label = input.getAttribute("data-label");
+        if (val) {
+            detailsArr.push(`• ${label}:${val}`);
         }
     });
 
-    const detailsString = collectedDetails.join("\n");
-    const output = document.getElementById('outputResult');
-    const btn = document.getElementById('generateBtn');
+    const detailsText = detailsArr.length > 0 ? detailsArr.join("\n") : "Tidak ada detail spesifik dikirim.";
 
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Meracik Brief Visual...`;
-    output.value = "Sedang menyusun brief master anti-AI look...";
+    const payload = {
+        design_type: designType,
+        sub_style: subStyle,
+        orientation: orientation,
+        size: size,
+        render_mode: renderMode,
+        tone: tone,
+        target_ai: targetAi,
+        details: detailsText
+    };
+
+    // UI Loading state
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Meracik Prompt...`;
+    outputResult.value = "Sedang meracik prompt profesional anti-AI look...";
 
     try {
-        const res = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                design_type: designType, 
-                sub_style: subStyle, 
-                orientation,
-                size: selectedSize, 
-                render_mode: renderMode, 
-                tone, 
-                target_ai: targetAi, 
-                details: detailsString
-            })
+        const response = await fetch("/api/generate", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
-        output.value = res.ok ? data.prompt : "Error: " + (data.detail || "Gagal memproses.");
-    } catch (err) {
-        output.value = "Error Koneksi: " + err.message;
+        const data = await response.json();
+        if (data.status === "success") {
+            outputResult.value = data.prompt;
+        } else {
+            outputResult.value = "Gagal memproses prompt. Silakan coba lagi.";
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        outputResult.value = "Terjadi kesalahan koneksi ke server.";
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
     }
 }
 
 function copyToClipboard() {
-    const output = document.getElementById('outputResult');
-    if (!output.value) return;
-    output.select();
-    document.execCommand('copy');
-    alert('Brief Prompt berhasil disalin!');
+    const outputResult = document.getElementById("outputResult");
+    if (!outputResult.value) return;
+
+    outputResult.select();
+    navigator.clipboard.writeText(outputResult.value).then(() => {
+        alert("Prompt berhasil disalin ke clipboard!");
+    }).catch(err => {
+        console.error("Gagal menyalin: ", err);
+    });
 }
