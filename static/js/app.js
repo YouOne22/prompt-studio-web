@@ -81,7 +81,7 @@ function toggleCustomSizeInput() {
 }
 
 /* ==========================================================================
-   META-PROMPT GENERATOR LOKAL (TANPA DEPENDENCY API KEY)
+   META-PROMPT GENERATOR LOKAL (OPTIMISED FOR DALL-E 3 & LLM REFINEMENT)
    ========================================================================== */
 
 function generatePrompt() {
@@ -140,11 +140,24 @@ DETAIL KONTEN & ELEMEN DESAIN:
 ${detailsText}
 
 =========================================
-INSTRUKSI PENGERJAAN PROMPT:
+INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 =========================================
-1. Buat prompt gambar dalam BAHASA INGGRIS yang kaya deskripsi visual (mengatur komposisi visual, tata letak elemen, hirarki tipografi, skema warna harmoni, lighting studio, serta gaya artistik anti-AI look).
-2. Sesuaikan format prompt dengan karakteristik platform [${targetAi}] (misalnya sertakan parameter aspek rasio jika menggunakan Midjourney).
-3. Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka, penjelasan, atau penutup.`;
+1. KUALITAS & GAYA VISUAL:
+   - Buat prompt dalam BAHASA INGGRIS yang kaya deskripsi visual (komposisi simetris/harmonis, lighting studio lembut, ornamen visual berkualitas tinggi, serta skema warna harmoni sesuai brief).
+   - Pastikan hasilnya terlihat profesional, rapi, dan anti-AI look (siap cetak/siap pakai).
+
+2. PENANGANAN TEKS (TYPO-PROOFING):
+   - Minta AI generator gambar untuk merender JUDUL UTAMA & SUB-JUDUL secara sangat jelas di dalam tanda petik ganda.
+   - Untuk detail teks yang panjang (seperti nama orang tua, tanggal, dan alamat lengkap), instruksikan AI untuk membuat tata letak tipografi yang rapi dan bersih (clean whitespace typography zone), atau sediakan spasi banner yang mudah disunting.
+
+3. PENANGANAN FOTO / PLACEHOLDER:
+   - Jika terdapat instruksi penyertaan foto pada brief, instruksikan AI untuk merancang "an elegant decorative golden frame / circular photo frame placeholder" di posisi yang sesuai (misal di sebelah kanan/kiri) agar foto asli dapat dimasukkan dengan rapi saat editing.
+
+4. FORMAT & ASPEK RASIO:
+   - Sesuaikan instruksi tata letak dengan jenis orientasi [${orientation}] dan dimensi [${size}] (contoh: gunakan format wide landscape banner untuk spanduk 300x200 cm).
+
+5. OUTPUT UTAMA:
+   - Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka, penjelasan, atau penutup.`;
 
         outputResult.value = metaPrompt;
 
