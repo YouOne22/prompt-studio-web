@@ -156,7 +156,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         let apiKey = localStorage.getItem("openrouter_api_key") || "";
 
         if (!apiKey) {
-            apiKey = prompt("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");
+            apiKey = prompt("Masukkan apikey");
             if (apiKey) {
                 apiKey = apiKey.trim();
                 localStorage.setItem("openrouter_api_key", apiKey);
@@ -178,7 +178,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             },
             body: JSON.stringify({
                 // Menggunakan model gratis di OpenRouter
-                model: "google/gemini-2.0-flash-exp:free", 
+                model: "poolside/laguna-s-2.1:free", 
                 messages: [
                     {
                         role: "system",
