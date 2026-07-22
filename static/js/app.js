@@ -306,8 +306,8 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
         // Model Selection: Gunakan Llama 3.2 Vision jika ada gambar referensi
         const selectedModel = currentBase64Image 
-            ? "llama-3.2-11b-vision-preview" 
-            : "llama-3.3-70b-versatile";
+    ? "llama-3.2-11b-vision-instruct" 
+    : "llama-3.3-70b-versatile";
 
         let userMessageContent;
         if (currentBase64Image) {
