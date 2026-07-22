@@ -88,15 +88,6 @@ function toggleCustomSizeInput() {
    ========================================================================== */
 
 async function generatePrompt() {
-    const generateBtn = document.getElementById("generateBtn");
-    const outputResult = document.getElementById("outputResult");
-
-    const designType = document.getElementById("designTypeSelect").value;
-    const subStyle = document.getElementById("subStyleSelect").value;
-    const orientation = document.getElementById("orientationSelect").value;
-    const renderMode = document.getElementById("renderModeSelect").value;
-    const tone = document.getElementById("toneSelect").value;
-    const targetAi = document.getElementById("targetAiSelect").value;
     const data = await response.json();
 let aiResult = data.choices[0]?.message?.content;
 
@@ -106,6 +97,16 @@ if (aiResult) {
     
     outputResult.value = aiResult;
 } else {
+    const generateBtn = document.getElementById("generateBtn");
+    const outputResult = document.getElementById("outputResult");
+
+    const designType = document.getElementById("designTypeSelect").value;
+    const subStyle = document.getElementById("subStyleSelect").value;
+    const orientation = document.getElementById("orientationSelect").value;
+    const renderMode = document.getElementById("renderModeSelect").value;
+    const tone = document.getElementById("toneSelect").value;
+    const targetAi = document.getElementById("targetAiSelect").value;
+
 
     let size = document.getElementById("sizeSelect").value;
     if (size === "Kustom") {
