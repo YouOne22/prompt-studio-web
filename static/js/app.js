@@ -179,7 +179,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             },
             body: JSON.stringify({
                 // Menggunakan model gratis di OpenRouter
-                model: "nvidia/nemotron-3-super-120b-a12b:free", 
+                model: "poolside/laguna-xs-2.1:free", 
                 messages: [
                     {
                         role: "system",
