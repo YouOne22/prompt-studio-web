@@ -64,3 +64,29 @@ def build_background_art_direction(design_type: str, orientation: str, size: str
 [ANTI-TEXT CONSTRAINTS]
 - {BACKGROUND_ONLY_NEGATIVE_PROMPT}
 """
+# Blok Prompt Baku untuk Kualitas & Anti-Noise Vector
+ANTI_NOISE_BLOCK = """
+[ANTI-NOISE & SOLID COLOR CONSTRAINTS]
+- STRICTLY NO NOISE, NO FILM GRAIN, NO SPECKLES, NO DITHERING, NO BLURRY DOTS, AND NO TEXTURE ARTIFACTS INSIDE FLAT FILLS.
+- Text fills and graphic containers MUST be 100% UNIFORM SOLID FLAT COLORS (Pure Flat CMYK vector style).
+- Razor-sharp clean edges on all typography and shapes with ZERO compression artifacts or fuzzy gradients inside dark areas.
+"""
+
+
+def build_art_direction_block(
+    design_type, sub_style, orientation, size, tone, render_mode
+) -> str:
+    return f"""
+[SPECIFICATIONS & ART DIRECTION]
+- Product Type: {design_type}
+- Style Category: {sub_style}
+- Layout Orientation: {orientation}
+- Print Dimensions: {size}
+- Tone & Mood: {tone}
+- Render Output Mode: {render_mode}
+
+[ANTI-AI LOOK & QUALITY CONSTRAINTS]
+- DO NOT include generic 3D rendered plastic look, overly glossy textures, distorted floating text, unnatural AI glows, messy typography, extra hands/fingers, or chaotic color gradients.
+- PRESENTATION: Clean 2D flat graphic design visual layout. Separated visual layers, ultra-crisp lines, suitable for direct execution in CorelDRAW or Adobe Illustrator.
+{ANTI_NOISE_BLOCK}
+"""
