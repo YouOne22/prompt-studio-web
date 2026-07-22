@@ -111,6 +111,39 @@
                     <h2 class="font-semibold text-sm text-white">Informasi Konten Desain</h2>
                 </div>
 
+                <!-- UPLOAD GAMBAR REFERENSI (VISION API) -->
+                <div class="mb-4 pb-4 border-b border-gray-800">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span><i class="fa-solid fa-image text-indigo-400 mr-1"></i> Gambar Referensi (Vision API)</span>
+                        <span class="text-[10px] text-gray-500 font-normal">Opsional</span>
+                    </label>
+                    
+                    <div id="dropZone" onclick="document.getElementById('imageInput').click()" class="border-2 border-dashed border-gray-700 hover:border-indigo-500/80 rounded-lg p-3 text-center cursor-pointer transition bg-[#1a1d2e]/50 hover:bg-[#1a1d2e] relative min-h-[90px] flex items-center justify-center">
+                        <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                        
+                        <!-- Placeholder Tampilan Kosong -->
+                        <div id="uploadPlaceholder" class="flex flex-col items-center gap-1">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl text-indigo-400/80"></i>
+                            <p class="text-xs text-gray-300 font-medium">Klik untuk upload foto/sketsa referensi</p>
+                            <p class="text-[10px] text-gray-500">PNG, JPG, WEBP (Sistem akan membaca gaya visualnya)</p>
+                        </div>
+
+                        <!-- Preview Gambar Terpasang -->
+                        <div id="imagePreviewContainer" class="hidden w-full flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <img id="imagePreview" src="" alt="Preview Referensi" class="w-12 h-12 object-cover rounded-lg border border-indigo-500/50 shadow">
+                                <div class="text-left overflow-hidden">
+                                    <p id="imageFileName" class="text-xs text-white font-medium truncate max-w-[180px]"></p>
+                                    <p class="text-[10px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Siap Di-analisis AI</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="removeImage(event)" class="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition shrink-0" title="Hapus Gambar">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Container Form Dinamis (Terisi via JavaScript) -->
                 <div id="dynamicFormContainer"></div>
             </div>
