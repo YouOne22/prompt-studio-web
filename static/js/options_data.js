@@ -7,7 +7,14 @@ const OPTIONS_DATA = {
             "Promosi Usaha / Toko / Grand Opening",
             "Kuliner / Makanan & Minuman",
             "Selamat Datang / Ucapan / Banner",
-            "Properti / Jual Beli / Sewa"
+            "Properti / Jual Beli / Sewa",
+            // --- SUB-KATEGORI BACKGROUND PANGGUNG ---
+            "Background Panggung Kesenian & Budaya",
+            "Background Panggung Kemerdekaan (17 Agustus)",
+            "Background Panggung Musik / Konser / Festival",
+            "Background Panggung Wisuda / Purnawiyata",
+            "Background Panggung Keagamaan / Tabligh Akbar",
+            "Background Panggung Hajatan / Acara Desa / Gala Dinner"
         ],
         sizes: [
             "3 x 1 Meter",
@@ -18,13 +25,41 @@ const OPTIONS_DATA = {
             "Kustom"
         ],
         fields: [
-            { id: "namaUsaha", label: "Judul Utama / Nama Acara / Nama Usaha", type: "text", placeholder: "Contoh: Peringatan Isra Mi'raj / Pemdes Sukamaju / Toko Maju Jaya" },
-            { id: "tagline", label: "Sub-Judul / Tema / Slogan Promosi", type: "text", placeholder: "Contoh: Meneladani Akhlak Nabi / Diskon Hingga 50% / Wujudkan Desa Digital" },
-            { id: "layanan", label: "Detail Acara / Penceramah / Poin Informasi / Produk", type: "textarea", placeholder: "Contoh:\n- Penceramah: KH. Ahmad\n- Menjual: Sembako, Pulsa, Alat Tulis\n- Poin Utama Acara..." },
+            { id: "namaUsaha", label: "Judul Utama / Nama Acara / Nama Usaha", type: "text", placeholder: "Contoh: Peringatan Isra Mi'raj / PENTAS SENI BUDAYA / Toko Maju Jaya" },
+            { id: "tagline", label: "Sub-Judul / Tema / Slogan Promosi", type: "text", placeholder: "Contoh: Meneladani Akhlak Nabi / Semarak Malam Puncak Kemerdekaan / Diskon 50%" },
+            { id: "layanan", label: "Detail Acara / Penceramah / Poin Informasi / Produk", type: "textarea", placeholder: "Contoh:\n- Penceramah: KH. Ahmad\n- Pengisi Acara: Tari Tradisional, Campursari\n- Menjual: Sembako, Pulsa, Alat Tulis" },
             { id: "kontak", label: "Waktu, Tanggal, Lokasi & Kontak (WA/HP)", type: "text", placeholder: "Contoh: Sabtu, 15 April 2026 | Masjid Agung | WA: 0812-3456-7890" },
             { id: "penyelenggara", label: "Penyelenggara / Logo / Sponsor (Opsional)", type: "text", placeholder: "Contoh: DKM Masjid Agung, Karang Taruna, Didukung oleh Bank X" },
             { id: "warna", label: "Preferensi Warna & Nuansa Visual (Opsional)", type: "text", placeholder: "Contoh: Hijau Islami & Gold / Merah Putih & Logo Garuda / Biru Modern" },
-            { id: "catatanKhusus", label: "Catatan Tambahan / Pesan Khusus AI (Opsional)", type: "textarea", placeholder: "Contoh: Berikan space kosong di sebelah kanan untuk foto pembicara..." }
+            { id: "catatanKhusus", label: "Catatan Tambahan / Pesan Khusus AI (Opsional)", type: "textarea", placeholder: "Contoh: Berikan space kosong di sebelah kanan untuk foto pembicara / panggung utama..." }
+        ]
+    },
+    "Backdrop / Banner Panggung": {
+        subStyles: [
+            "Background Panggung Kesenian & Budaya",
+            "Background Panggung Kemerdekaan (17 Agustus)",
+            "Background Panggung Musik / Konser / Festival",
+            "Background Panggung Wisuda / Purnawiyata",
+            "Background Panggung Keagamaan / Tabligh Akbar",
+            "Background Panggung Hajatan / Acara Desa / Gala Dinner"
+        ],
+        sizes: [
+            "3 x 2 Meter",
+            "4 x 2.5 Meter",
+            "5 x 3 Meter",
+            "6 x 3 Meter",
+            "8 x 4 Meter",
+            "10 x 4 Meter",
+            "Kustom"
+        ],
+        fields: [
+            { id: "namaUsaha", label: "Judul Utama Panggung / Nama Acara", type: "text", placeholder: "Contoh: MALAM PUNCAK PERINGATAN HUT RI KE-81 / WISUDA PURNAWIYATA" },
+            { id: "tagline", label: "Sub-Judul / Tema Utama Panggung", type: "text", placeholder: "Contoh: Nusantara Baru Indonesia Maju / Melangkah Mantap Menuju Masa Depan" },
+            { id: "layanan", label: "Pengisi Acara / Bintang Tamu / Agenda Utama", type: "textarea", placeholder: "Contoh:\n- Pertunjukan Tari Kolosal\n- Musik Organ Tunggal\n- Penyerahan Hadiah Lomba" },
+            { id: "kontak", label: "Waktu, Tanggal & Lokasi Acara", type: "text", placeholder: "Contoh: Minggu, 17 Agustus 2026 | Panggung Utama Lapangan Merdeka" },
+            { id: "penyelenggara", label: "Penyelenggara / Logo / Sponsor", type: "text", placeholder: "Contoh: Pemerintah Desa, Karang Taruna Tunas Muda" },
+            { id: "warna", label: "Preferensi Warna & Aesthetic Panggung", type: "text", placeholder: "Contoh: Nuansa Merah Putih Megah / Nuansa Jawa Klasik Batik Gold / Neon Cyberpunk" },
+            { id: "catatanKhusus", label: "Catatan Tambahan untuk AI", type: "textarea", placeholder: "Contoh: Buat latar belakang dengan tata lampu panggung pencahayaan sorot (stage spotlight) yang dramatis..." }
         ]
     },
     "Poster": {
@@ -32,6 +67,7 @@ const OPTIONS_DATA = {
             "Poster Edukasi / Infografis",
             "Poster Event / Konser / Pameran",
             "Poster Kebudayaan & Keagamaan",
+            "Poster Kemerdekaan / Panggung / Lomba 17-an",
             "Poster Produk / Iklan Commercial",
             "Poster Kampanye / Layanan Masyarakat"
         ],
