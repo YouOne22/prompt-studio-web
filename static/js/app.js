@@ -178,7 +178,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             },
             body: JSON.stringify({
                 // Menggunakan model gratis di OpenRouter
-                model: "poolside/laguna-s-2.1:free", 
+                model: "poolside/laguna-s-2.1:free, google/gemini-3.6-flash", 
                 messages: [
                     {
                         role: "system",
