@@ -6,8 +6,9 @@ from pydantic import BaseModel
 from google import genai
 from prompts.builder import build_prompt
 
-app = FastAPI()
+app = FastAPI(title="Prompt Studio API", version="1.0.0")
 
+# Mount folder static untuk JavaScript & CSS
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 api_key = os.getenv("GEMINI_API_KEY")
@@ -38,13 +39,17 @@ def generate_prompt(req: PromptRequest):
     if client:
         try:
             response = client.models.generate_content(
-                model="gemini-Imagen-3",
+                model="gemini-2.5-flash",
                 contents=user_content,
                 config={"system_instruction": system_instruction}
             )
             if response and response.text:
                 return {"status": "success", "prompt": response.text}
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Warning] Gemini API Error / Failover to Fallback: {e}")
 
     return {"status": "success", "prompt": fallback_result}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
