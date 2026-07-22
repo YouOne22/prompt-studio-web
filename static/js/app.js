@@ -1,7 +1,6 @@
 // ==========================================================================
-// CONFIGURATION: Tempelkan API Key OpenAI Anda di bawah ini
+// CONFIGURATION
 // ==========================================================================
-const OPENAI_API_KEY = localStorage.getItem("openai_api_key") || "";
 const STORAGE_KEY = "prompt_studio_saved_briefs";
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -153,8 +152,19 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
     // 2. EKSEKUSI HYBRID SYSTEM
     try {
-        if (!OPENAI_API_KEY || OPENAI_API_KEY.includes("MASUKKAN_API_KEY_BARU_ANDA_DI_SINI")) {
-            throw new Error("API Key belum disetting.");
+        // Ambil API Key dari storage browser, jika belum ada minta input dari user
+        let apiKey = localStorage.getItem("openai_api_key") || "";
+
+        if (!apiKey) {
+            apiKey = prompt("Masukkan OpenAI API Key Anda (tersimpan aman di browser lokal):");
+            if (apiKey) {
+                apiKey = apiKey.trim();
+                localStorage.setItem("openai_api_key", apiKey);
+            }
+        }
+
+        if (!apiKey) {
+            throw new Error("API Key tidak diisi.");
         }
 
         // Panggilan ke API OpenAI (Model gpt-4o-mini)
@@ -162,7 +172,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${OPENAI_API_KEY}`
+                "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 model: "gpt-4o-mini",
@@ -182,6 +192,10 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
         if (!response.ok) {
             const errJson = await response.json().catch(() => ({}));
+            // Jika Key salah / kadaluarsa, hapus dari storage browser agar nanti diminta ulang
+            if (response.status === 401) {
+                localStorage.removeItem("openai_api_key");
+            }
             throw new Error(errJson.error?.message || `HTTP status ${response.status}`);
         }
 
