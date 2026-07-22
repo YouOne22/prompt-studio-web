@@ -4,9 +4,27 @@
 const STORAGE_KEY = "prompt_studio_saved_briefs";
 let currentBase64Image = null; // Menyimpan data gambar referensi dalam format base64
 
+// Initial Setup saat DOM selesai di-load
 document.addEventListener("DOMContentLoaded", function () {
+    // 1. Restore API Key dari LocalStorage ke Input Header (jika ada)
+    const savedKey = localStorage.getItem("groq_api_key");
+    const keyInput = document.getElementById("groqApiKeyInput");
+    if (savedKey && keyInput) {
+        keyInput.value = savedKey;
+    }
+
+    // 2. Inisialisasi Tampilan Sidebar & Form Pertama Kali
     onSidebarChange();
 });
+
+// Fungsi simpan API Key secara langsung dari header input
+function saveApiKey(val) {
+    if (val && val.trim()) {
+        localStorage.setItem("groq_api_key", val.trim());
+    } else {
+        localStorage.removeItem("groq_api_key");
+    }
+}
 
 // ==========================================================================
 // MANAJEMEN UPLOAD & PREVIEW GAMBAR REFERENSI (VISION)
@@ -39,7 +57,9 @@ function handleImageUpload(event) {
 function removeImage(event) {
     if (event) event.stopPropagation();
     currentBase64Image = null;
-    document.getElementById("imageInput").value = "";
+    const input = document.getElementById("imageInput");
+    if (input) input.value = "";
+    
     document.getElementById("imagePreview").src = "";
     document.getElementById("imageFileName").textContent = "";
     document.getElementById("uploadPlaceholder").classList.remove("hidden");
@@ -50,15 +70,23 @@ function removeImage(event) {
 // MANAJEMEN FORM & SIDEBAR DINAMIS
 // ==========================================================================
 function onSidebarChange() {
-    const designType = document.getElementById("designTypeSelect").value;
+    const designTypeSelect = document.getElementById("designTypeSelect");
+    if (!designTypeSelect) return;
+
+    const designType = designTypeSelect.value;
     const subStyleSelect = document.getElementById("subStyleSelect");
     const sizeSelect = document.getElementById("sizeSelect");
 
-    const data = OPTIONS_DATA[designType] || OPTIONS_DATA["Lainnya"];
+    // Fallback jika OPTIONS_DATA belum/tidak terdefinisi
+    const options = (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA[designType]) 
+        ? OPTIONS_DATA[designType] 
+        : (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA["Lainnya"]) 
+            ? OPTIONS_DATA["Lainnya"] 
+            : { subStyles: ["Umum / Standard"], sizes: ["A4", "Kustom"] };
 
     // Populate Sub-Style
     subStyleSelect.innerHTML = "";
-    data.subStyles.forEach(style => {
+    (options.subStyles || []).forEach(style => {
         const opt = document.createElement("option");
         opt.value = style;
         opt.textContent = style;
@@ -67,7 +95,7 @@ function onSidebarChange() {
 
     // Populate Size Presets
     sizeSelect.innerHTML = "";
-    data.sizes.forEach(sz => {
+    (options.sizes || []).forEach(sz => {
         const opt = document.createElement("option");
         opt.value = sz;
         opt.textContent = sz;
@@ -79,13 +107,29 @@ function onSidebarChange() {
 }
 
 function onSubStyleChange() {
-    const designType = document.getElementById("designTypeSelect").value;
-    const data = OPTIONS_DATA[designType] || OPTIONS_DATA["Lainnya"];
+    const designTypeSelect = document.getElementById("designTypeSelect");
+    if (!designTypeSelect) return;
+
+    const designType = designTypeSelect.value;
     const container = document.getElementById("dynamicFormContainer");
+    if (!container) return;
+
+    // Default fields jika OPTIONS_DATA tidak menyediakan fields khusus
+    const defaultFields = [
+        { id: "main_title", label: `Judul Utama ${designType}`, placeholder: "Contoh: OJO DUMEH FEST / WARUNG BERKAH", type: "input" },
+        { id: "subtitle", label: "Sub-Judul / Tema", placeholder: "Contoh: PENTAS SENI PERTUNJUKAN RAKYAT", type: "input" },
+        { id: "highlights", label: "Isi Ringkas / Highlights", placeholder: "Contoh: Daftar Bintang Tamu / Menu Utama", type: "textarea" },
+        { id: "datetime", label: "Waktu & Lokasi", placeholder: "Contoh: Minggu, 2 Agustus | Lapangan Desa Kemitir", type: "input" },
+        { id: "cta", label: "Call to Action / Contact", placeholder: "Contoh: HTM Gratis | Hub: 0812-xxxx", type: "input" }
+    ];
+
+    const fields = (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA[designType]?.fields) 
+        ? OPTIONS_DATA[designType].fields 
+        : defaultFields;
 
     container.innerHTML = "";
 
-    data.fields.forEach(field => {
+    fields.forEach(field => {
         const wrapper = document.createElement("div");
         wrapper.className = "mb-3.5";
 
@@ -97,15 +141,15 @@ function onSubStyleChange() {
         if (field.type === "textarea") {
             input = document.createElement("textarea");
             input.rows = 3;
-            input.className = "w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 resize-none";
+            input.className = "w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 resize-y leading-relaxed font-sans";
         } else {
             input = document.createElement("input");
             input.type = "text";
-            input.className = "w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500";
+            input.className = "w-full bg-[#1a1d2e] border border-gray-700/80 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-sans";
         }
 
         input.id = `dynamic_${field.id}`;
-        input.placeholder = field.placeholder;
+        input.placeholder = field.placeholder || "";
         input.setAttribute("data-label", field.label);
 
         wrapper.appendChild(label);
@@ -117,6 +161,7 @@ function onSubStyleChange() {
 function toggleCustomSizeInput() {
     const sizeSelect = document.getElementById("sizeSelect");
     const container = document.getElementById("customSizeContainer");
+    if (!sizeSelect || !container) return;
 
     if (sizeSelect.value === "Kustom") {
         container.classList.remove("hidden");
@@ -125,10 +170,9 @@ function toggleCustomSizeInput() {
     }
 }
 
-/* ==========================================================================
-   HYBRID GENERATOR (OPENROUTER/GROQ VISION API -> LOCAL FALLBACK)
-   ========================================================================== */
-
+// ==========================================================================
+// HYBRID GENERATOR (GROQ VISION API -> LOCAL FALLBACK)
+// ==========================================================================
 async function generatePrompt() {
     const generateBtn = document.getElementById("generateBtn");
     const outputResult = document.getElementById("outputResult");
@@ -162,7 +206,7 @@ async function generatePrompt() {
         ? detailsArr.join("\n") 
         : "- (Tidak ada detail konten tambahan yang diisi. JANGAN buatkan elemen teks tambahan).";
 
-    // 1. KONTRAK META-PROMPT LOKAL
+    // KONTRAK META-PROMPT
     const imageInstruction = currentBase64Image 
         ? "\n6. GAMBAR REFERENSI DISERTAKAN: Analisis elemen visual, warna, objek, dan gaya dari gambar referensi terlampir. Integrasikan karakteristik visual tersebut ke dalam Master Prompt secara harmonis."
         : "";
@@ -201,15 +245,18 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         ? "Sedang Menganalisis Gambar Referensi & Meracik Prompt..." 
         : "Sedang menghubungi AI Prompter Builder untuk meracik prompt profesional...";
 
-    // 2. EKSEKUSI HYBRID SYSTEM (GROQ API)
     try {
-        let apiKey = localStorage.getItem("groq_api_key") || "";
+        // Cek API Key dari Input Header atau LocalStorage
+        let apiKey = document.getElementById("groqApiKeyInput")?.value.trim() || localStorage.getItem("groq_api_key") || "";
 
         if (!apiKey) {
-            apiKey = prompt("Masukkan Groq API Key Anda:");
+            apiKey = prompt("Masukkan Groq API Key Anda (gsk_...):");
             if (apiKey) {
                 apiKey = apiKey.trim();
                 localStorage.setItem("groq_api_key", apiKey);
+                if (document.getElementById("groqApiKeyInput")) {
+                    document.getElementById("groqApiKeyInput").value = apiKey;
+                }
             }
         }
 
@@ -277,7 +324,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
     } catch (error) {
         console.warn("Panggilan Groq API gagal/terkendala. Berpindah ke Fallback Lokal:", error.message);
 
-        // FALLBACK AUTOMATIC: Jika API gagal/kendala sinyal, tampilkan Meta-Prompt lokal!
+        // FALLBACK AUTOMATIC: Tampilkan Meta-Prompt lokal jika API gagal/offline
         outputResult.value = `/* [SISTEM HYBRID: API Groq Offline / Perlu Key Baru] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT / Claude */\n\n` + metaPromptText;
     } finally {
         generateBtn.disabled = false;
@@ -287,20 +334,23 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
 function copyToClipboard() {
     const outputResult = document.getElementById("outputResult");
-    if (!outputResult.value) return;
+    if (!outputResult || !outputResult.value.trim()) {
+        alert("Belum ada teks prompt untuk disalin!");
+        return;
+    }
 
-    outputResult.select();
     navigator.clipboard.writeText(outputResult.value).then(() => {
         alert("Prompt berhasil disalin ke clipboard!");
     }).catch(err => {
-        console.error("Gagal menyalin: ", err);
+        outputResult.select();
+        document.execCommand("copy");
+        alert("Prompt berhasil disalin!");
     });
 }
 
-/* ==========================================================================
-   FITUR SIMPAN & RIWAYAT BRIEF
-   ========================================================================== */
-
+// ==========================================================================
+// FITUR SIMPAN & RIWAYAT BRIEF
+// ==========================================================================
 function saveCurrentBrief() {
     const outputResult = document.getElementById("outputResult").value;
 
@@ -313,7 +363,7 @@ function saveCurrentBrief() {
     const subStyle = document.getElementById("subStyleSelect").value;
     const orientation = document.getElementById("orientationSelect").value;
     const sizeSelectVal = document.getElementById("sizeSelect").value;
-    const customSizeVal = document.getElementById("customSizeInput").value;
+    const customSizeVal = document.getElementById("customSizeInput")?.value || "";
     const renderMode = document.getElementById("renderModeSelect").value;
     const tone = document.getElementById("toneSelect").value;
     const targetAi = document.getElementById("targetAiSelect").value;
@@ -346,7 +396,7 @@ function saveCurrentBrief() {
             targetAi
         },
         dynamicFields,
-        imageRef: currentBase64Image, // Menyimpan gambar referensi jika ada
+        imageRef: currentBase64Image,
         outputPrompt: outputResult
     };
 
@@ -355,13 +405,16 @@ function saveCurrentBrief() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(savedBriefs));
 
     const saveBtn = document.getElementById("saveBtn");
-    saveBtn.innerHTML = `<i class="fa-solid fa-check"></i> Tersimpan`;
-    saveBtn.classList.replace("bg-emerald-600", "bg-emerald-700");
+    if (saveBtn) {
+        const originalContent = saveBtn.innerHTML;
+        saveBtn.innerHTML = `<i class="fa-solid fa-check"></i> Tersimpan`;
+        saveBtn.classList.replace("bg-emerald-600", "bg-emerald-700");
 
-    setTimeout(() => {
-        saveBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Simpan`;
-        saveBtn.classList.replace("bg-emerald-700", "bg-emerald-600");
-    }, 1500);
+        setTimeout(() => {
+            saveBtn.innerHTML = originalContent;
+            saveBtn.classList.replace("bg-emerald-700", "bg-emerald-600");
+        }, 1500);
+    }
 }
 
 function openHistoryModal() {
@@ -375,6 +428,8 @@ function closeHistoryModal() {
 
 function renderHistory() {
     const historyList = document.getElementById("historyList");
+    if (!historyList) return;
+
     const savedBriefs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
     if (savedBriefs.length === 0) {
@@ -416,22 +471,24 @@ function loadBrief(id) {
 
     if (!brief) return;
 
-    // 1. Set Parameter Utama
+    // 1. Set Kategori Utama & Re-render Form
     document.getElementById("designTypeSelect").value = brief.params.designType;
     onSidebarChange();
 
-    // 2. Set Dropdown
+    // 2. Restore Sub-style & Parameter Lainnya
     document.getElementById("subStyleSelect").value = brief.params.subStyle;
     document.getElementById("orientationSelect").value = brief.params.orientation;
     document.getElementById("sizeSelect").value = brief.params.size;
-    document.getElementById("customSizeInput").value = brief.params.customSize || "";
+    if (document.getElementById("customSizeInput")) {
+        document.getElementById("customSizeInput").value = brief.params.customSize || "";
+    }
     toggleCustomSizeInput();
 
     document.getElementById("renderModeSelect").value = brief.params.renderMode;
     document.getElementById("toneSelect").value = brief.params.tone;
     document.getElementById("targetAiSelect").value = brief.params.targetAi;
 
-    // 3. Kembalikan Gambar Referensi (jika ada)
+    // 3. Restore Gambar Referensi
     if (brief.imageRef) {
         currentBase64Image = brief.imageRef;
         document.getElementById("imagePreview").src = currentBase64Image;
@@ -442,7 +499,7 @@ function loadBrief(id) {
         removeImage();
     }
 
-    // 4. Kembalikan Dynamic Fields
+    // 4. Restore Dynamic Fields
     if (brief.dynamicFields) {
         for (const [fieldId, val] of Object.entries(brief.dynamicFields)) {
             const inputElem = document.getElementById(fieldId);
@@ -452,7 +509,7 @@ function loadBrief(id) {
         }
     }
 
-    // 5. Restore Output
+    // 5. Restore Output Text
     document.getElementById("outputResult").value = brief.outputPrompt || "";
 
     closeHistoryModal();
