@@ -179,7 +179,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             },
             body: JSON.stringify({
                 // Menggunakan model gratis di OpenRouter
-                model: "nvidia/nemotron-3-ultra-550b-a55b:free", 
+                model: "nvidia/llama-nemotron-rerank-vl-1b-v2:free", 
                 messages: [
                     {
                         role: "system",
@@ -190,7 +190,8 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                         content: metaPromptText
                     }
                 ],
-                temperature: 0.7
+                temperature: 0.7.
+                max_tokens: 1500
             })
         });
 
