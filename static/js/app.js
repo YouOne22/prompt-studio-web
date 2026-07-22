@@ -239,9 +239,51 @@ async function getActiveGroqVisionModel(apiKey) {
 }
 
 // ==========================================================================
-// GENERATOR ENGINE
+// GENERATOR ENGINE (DENGAN VERIFIKASI KODE AKSES)
 // ==========================================================================
 async function generatePrompt() {
+    // ----------------------------------------------------------------------
+    // STEP 1: VERIFIKASI KODE AKSES PENGGUNA TERLEBIH DAHULU
+    // ----------------------------------------------------------------------
+    let accessKey = localStorage.getItem("user_access_key");
+
+    if (!accessKey) {
+        accessKey = prompt("Masukkan Kode Akses / License Key Anda:");
+        if (accessKey) {
+            accessKey = accessKey.trim();
+        }
+    }
+
+    if (!accessKey) {
+        alert("Akses Ditolak: Anda harus memasukkan Kode Akses untuk menggunakan aplikasi.");
+        return;
+    }
+
+    try {
+        const verifyRes = await fetch('/api/verify-key', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_key: accessKey })
+        });
+
+        if (!verifyRes.ok) {
+            localStorage.removeItem("user_access_key"); // Hapus kunci yang tidak valid/dicabut
+            alert("Akses Ditolak! Kode Akses Anda tidak valid atau telah dicabut oleh Admin.");
+            return;
+        }
+
+        // Simpan kunci valid di browser
+        localStorage.setItem("user_access_key", accessKey);
+
+    } catch (err) {
+        console.error("Gagal melakukan verifikasi akses:", err);
+        alert("Gagal terhubung ke server untuk memverifikasi Kode Akses.");
+        return;
+    }
+
+    // ----------------------------------------------------------------------
+    // STEP 2: PROSES GENERATE PROMPT
+    // ----------------------------------------------------------------------
     const generateBtn = document.getElementById("generateBtn");
     const outputResult = document.getElementById("outputResult");
 
