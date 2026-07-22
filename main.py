@@ -39,7 +39,7 @@ def generate_prompt(req: PromptRequest):
     if client:
         try:
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="openai_api_key",
                 contents=user_content,
                 config={"system_instruction": system_instruction}
             )
