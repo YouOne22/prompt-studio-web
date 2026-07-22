@@ -189,8 +189,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                         content: metaPromptText
                     }
                 ],
-                temperature: 0.7,
-                max_tokens: 1500
+                temperature: 0.7
             })
         });
 
