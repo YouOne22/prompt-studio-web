@@ -97,6 +97,15 @@ async function generatePrompt() {
     const renderMode = document.getElementById("renderModeSelect").value;
     const tone = document.getElementById("toneSelect").value;
     const targetAi = document.getElementById("targetAiSelect").value;
+    const data = await response.json();
+let aiResult = data.choices[0]?.message?.content;
+
+if (aiResult) {
+    // 🔹 Tambahkan baris ini untuk menghapus ```markdown dan ``` secara otomatis
+    aiResult = aiResult.replace(/```markdown/gi, "").replace(/```/g, "").trim();
+    
+    outputResult.value = aiResult;
+} else {
 
     let size = document.getElementById("sizeSelect").value;
     if (size === "Kustom") {
