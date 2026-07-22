@@ -88,15 +88,6 @@ function toggleCustomSizeInput() {
    ========================================================================== */
 
 async function generatePrompt() {
-    const data = await response.json();
-let aiResult = data.choices[0]?.message?.content;
-
-if (aiResult) {
-    // 🔹 Tambahkan baris ini untuk menghapus ```markdown dan ``` secara otomatis
-    aiResult = aiResult.replace(/```markdown/gi, "").replace(/```/g, "").trim();
-    
-    outputResult.value = aiResult;
-} else {
     const generateBtn = document.getElementById("generateBtn");
     const outputResult = document.getElementById("outputResult");
 
