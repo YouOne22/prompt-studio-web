@@ -4,6 +4,14 @@
 const STORAGE_KEY = "prompt_studio_saved_briefs";
 let currentBase64Image = null; // Menyimpan data gambar terkompresi dalam format base64
 
+// Daftar Kunci Akses Cadangan (digunakan jika backend API /api/verify-key belum siap)
+const LOCAL_VALID_KEYS = [
+    "KEY-ADMIN-123",
+    "KEY-VIP-12345",
+    "PROMPT-STUDIO-2026",
+    "MEMBER-SECRET-99"
+];
+
 document.addEventListener("DOMContentLoaded", function () {
     // 1. Restore API Key dari LocalStorage ke Input Header jika ada
     const savedKey = localStorage.getItem("groq_api_key");
@@ -221,21 +229,18 @@ async function getActiveGroqVisionModel(apiKey) {
         });
         if (res.ok) {
             const data = await res.json();
-            // Cari model yang memiliki kata 'vision' dan masih aktif
             const visionModels = (data.data || [])
                 .map(m => m.id)
                 .filter(id => id.toLowerCase().includes("vision"));
             
             if (visionModels.length > 0) {
-                // Utamakan model 90b jika ada, atau ambil vision model pertama
                 return visionModels.find(m => m.includes("90b")) || visionModels[0];
             }
         }
     } catch (e) {
         console.warn("Gagal mengecek daftar model Groq secara otomatis:", e);
     }
-    // Fallback default jika cek API list gagal
-    return "llama-3.2-90b-vision-preview";
+    return "llama-3.2-11b-vision-preview";
 }
 
 // ==========================================================================
@@ -259,6 +264,9 @@ async function generatePrompt() {
         return;
     }
 
+    // Proses Verifikasi (Backend First, fallback ke Local Check)
+    let isKeyValid = false;
+
     try {
         const verifyRes = await fetch('/api/verify-key', {
             method: 'POST',
@@ -266,20 +274,27 @@ async function generatePrompt() {
             body: JSON.stringify({ access_key: accessKey })
         });
 
-        if (!verifyRes.ok) {
-            localStorage.removeItem("user_access_key"); // Hapus kunci yang tidak valid/dicabut
-            alert("Akses Ditolak! Kode Akses Anda tidak valid atau telah dicabut oleh Admin.");
-            return;
+        if (verifyRes.ok) {
+            isKeyValid = true;
+        } else if (verifyRes.status === 404) {
+            // Endpoint backend tidak ditemukan, gunakan fallback lokal
+            isKeyValid = LOCAL_VALID_KEYS.includes(accessKey);
+        } else {
+            isKeyValid = false;
         }
-
-        // Simpan kunci valid di browser
-        localStorage.setItem("user_access_key", accessKey);
-
     } catch (err) {
-        console.error("Gagal melakukan verifikasi akses:", err);
-        alert("Gagal terhubung ke server untuk memverifikasi Kode Akses.");
+        console.warn("Server backend tidak merespons, menggunakan pengecekan lisensi lokal:", err);
+        isKeyValid = LOCAL_VALID_KEYS.includes(accessKey);
+    }
+
+    if (!isKeyValid) {
+        localStorage.removeItem("user_access_key");
+        alert("Akses Ditolak! Kode Akses Anda tidak valid atau telah dicabut.");
         return;
     }
+
+    // Simpan kunci yang terverifikasi
+    localStorage.setItem("user_access_key", accessKey);
 
     // ----------------------------------------------------------------------
     // STEP 2: PROSES GENERATE PROMPT
@@ -375,7 +390,6 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         // Pilihan Model Otomatis
         let selectedModel = "llama-3.3-70b-versatile";
         if (currentBase64Image) {
-            // Ambil model Vision yang BENAR-BENAR aktif di akun/API Groq Anda saat ini
             selectedModel = await getActiveGroqVisionModel(apiKey);
         }
 
