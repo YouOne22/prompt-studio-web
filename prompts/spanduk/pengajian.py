@@ -1,9 +1,24 @@
 from prompts.base_engine import build_art_direction_block
 
+
 def get_spanduk_pengajian_prompt(req) -> str:
     art_block = build_art_direction_block(
-        req.design_type, req.sub_style, req.orientation, req.size, req.tone, req.render_mode
+        req.design_type,
+        req.sub_style,
+        req.orientation,
+        req.size,
+        req.tone,
+        req.render_mode,
     )
+
+    # Menangkap input ornamen tambahan jika diisi oleh user
+    extra_ornaments_input = getattr(req, "extra_ornaments", "")
+    ornaments_section = (
+        f"- Custom Extra Ornaments & Visual Request: {extra_ornaments_input}"
+        if extra_ornaments_input
+        else "- Ornaments: Subtle geometric Islamic vector patterns (Arabesque/Moroccan tiles) as background texture. Avoid heavy 3D domes."
+    )
+
     extra = f"\n- Detailed Content Information:\n{req.details}" if req.details else ""
 
     return f"""
@@ -14,7 +29,7 @@ Act as a Senior Islamic Graphic Designer and Art Director. Create an exquisite, 
 
 [VISUAL STYLE & PALETTE]
 - Color Palette: Deep Emerald Green (CMYK: 85,20,90,40), Metallic Warm Gold accents, and Crisp Cream Background.
-- Ornaments: Subtle geometric Islamic vector patterns (Arabesque/Moroccan tiles) as background texture. Avoid heavy 3D domes.
+{ornaments_section}
 - Typography: Elegant Calligraphic header style paired with clean Sans-Serif for time, location, and speaker names.
 
 [CONTENT STRUCTURE]
