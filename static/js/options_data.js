@@ -18,11 +18,13 @@ const OPTIONS_DATA = {
             "Kustom"
         ],
         fields: [
-            { id: "namaUsaha", label: "Judul Utama / Nama Acara / Nama Usaha", type: "text", placeholder: "Contoh: Peringatan Isra Mi'raj / Pemdes Sukamaju" },
-            { id: "tagline", label: "Sub-Judul / Tema / Tagline", type: "text", placeholder: "Contoh: Meneladani Akhlak Nabi / Wujudkan Desa Digital" },
-            { id: "layanan", label: "Detail Acara / Penceramah / Poin Informasi", type: "textarea", placeholder: "Contoh: Penceramah: KH. Ahmad | Bintang Tamu / Poin Layanan..." },
-            { id: "kontak", label: "Waktu, Lokasi & Kontak", type: "text", placeholder: "Contoh: Sabtu, 15 April 2026 | Masjid Agung | WA: 0812-xxx" },
-            { id: "warna", label: "Preferensi Warna & Ornamen (Opsional)", type: "text", placeholder: "Contoh: Hijau Islami & Gold / Merah Putih & Logo Garuda" }
+            { id: "namaUsaha", label: "Judul Utama / Nama Acara / Nama Usaha", type: "text", placeholder: "Contoh: Peringatan Isra Mi'raj / Pemdes Sukamaju / Toko Maju Jaya" },
+            { id: "tagline", label: "Sub-Judul / Tema / Slogan Promosi", type: "text", placeholder: "Contoh: Meneladani Akhlak Nabi / Diskon Hingga 50% / Wujudkan Desa Digital" },
+            { id: "layanan", label: "Detail Acara / Penceramah / Poin Informasi / Produk", type: "textarea", placeholder: "Contoh:\n- Penceramah: KH. Ahmad\n- Menjual: Sembako, Pulsa, Alat Tulis\n- Poin Utama Acara..." },
+            { id: "kontak", label: "Waktu, Tanggal, Lokasi & Kontak (WA/HP)", type: "text", placeholder: "Contoh: Sabtu, 15 April 2026 | Masjid Agung | WA: 0812-3456-7890" },
+            { id: "penyelenggara", label: "Penyelenggara / Logo / Sponsor (Opsional)", type: "text", placeholder: "Contoh: DKM Masjid Agung, Karang Taruna, Didukung oleh Bank X" },
+            { id: "warna", label: "Preferensi Warna & Nuansa Visual (Opsional)", type: "text", placeholder: "Contoh: Hijau Islami & Gold / Merah Putih & Logo Garuda / Biru Modern" },
+            { id: "catatanKhusus", label: "Catatan Tambahan / Pesan Khusus AI (Opsional)", type: "textarea", placeholder: "Contoh: Berikan space kosong di sebelah kanan untuk foto pembicara..." }
         ]
     },
     "Poster": {
@@ -41,10 +43,13 @@ const OPTIONS_DATA = {
         ],
         fields: [
             { id: "judulPoster", label: "Judul Utama Poster", type: "text", placeholder: "Contoh: Festival Seni & Tabligh Akbar 2026" },
-            { id: "subJudul", label: "Sub-Judul / Tema Acara", type: "text", placeholder: "Contoh: Menjaga Tradisi di Era Digital" },
-            { id: "tanggalLokasi", label: "Waktu, Tanggal & Lokasi", type: "text", placeholder: "Sabtu, 15 Agustus 2026 @ Hall A Jakarta" },
-            { id: "poinPenting", label: "Isi Ringkas / Highlights / Pemateri", type: "textarea", placeholder: "Poin-poin informasi penting atau daftar narasumber..." },
-            { id: "callToAction", label: "Call To Action / Registrasi", type: "text", placeholder: "Daftar gratis di www.website.com / Hubungi 0812-xxx" }
+            { id: "subJudul", label: "Sub-Judul / Tema Utama", type: "text", placeholder: "Contoh: Menjaga Tradisi di Era Digital" },
+            { id: "poinPenting", label: "Isi Ringkas / Highlights / Pemateri", type: "textarea", placeholder: "Contoh:\n1. Syarat Pendaftaran\n2. Bintang Tamu / Keynote Speaker\n3. Fasilitas Peserta" },
+            { id: "tanggalLokasi", label: "Waktu, Tanggal & Lokasi", type: "text", placeholder: "Contoh: Sabtu, 15 Agustus 2026 @ Hall A Jakarta" },
+            { id: "callToAction", label: "Call To Action / Registrasi & HTM", type: "text", placeholder: "Contoh: HTM Gratis | Daftar di www.website.com | Hub: 0812-xxx" },
+            { id: "penyelenggara", label: "Penyelenggara & Sponsor", type: "text", placeholder: "Contoh: Panitia Hari Besar Islam & BEM Universitas X" },
+            { id: "warna", label: "Preferensi Warna & Style Visual", type: "text", placeholder: "Contoh: Dark Mode dengan aksen Gold & Neon Gold" },
+            { id: "catatanKhusus", label: "Catatan Tambahan untuk AI", type: "text", placeholder: "Contoh: Buat tata letak bertema futuristik minimalis" }
         ]
     },
     "Kartu Nama": {
@@ -62,10 +67,12 @@ const OPTIONS_DATA = {
         ],
         fields: [
             { id: "namaLengkap", label: "Nama Lengkap & Gelar", type: "text", placeholder: "Contoh: H. Ahmad Pratama, S.T." },
-            { id: "jabatan", label: "Jabatan / Profesi", type: "text", placeholder: "Contoh: Chief Executive Officer" },
-            { id: "namaPerusahaan", label: "Nama Perusahaan / Lembaga", type: "text", placeholder: "Contoh: PRST Digital Solution" },
-            { id: "kontakLengkap", label: "Detail Kontak (Telepon, Email, Web)", type: "textarea", placeholder: "Telp: +62812xxx\nEmail: ahmad@prst.id\nWeb: www.prst.id" },
-            { id: "sosmed", label: "Media Sosial / Alamat", type: "text", placeholder: "LinkedIn: /in/ahmad | Jakarta, Indonesia" }
+            { id: "jabatan", label: "Jabatan / Profesi / Spesialisasi", type: "text", placeholder: "Contoh: Chief Executive Officer / Graphic Designer" },
+            { id: "namaPerusahaan", label: "Nama Perusahaan / Brand / Lembaga", type: "text", placeholder: "Contoh: PRST Digital Solution" },
+            { id: "kontakLengkap", label: "Detail Kontak (Telepon, WA & Email)", type: "textarea", placeholder: "Telp/WA: +62 812-3456-7890\nEmail: ahmad@prst.id" },
+            { id: "sosmed", label: "Website, Media Sosial & Alamat", type: "text", placeholder: "Web: www.prst.id | IG: @prst.id | Jakarta, Indonesia" },
+            { id: "logoElemen", label: "Logo & Slogan Singkat", type: "text", placeholder: "Contoh: Logo di pojok kiri atas | Slogan: 'Your Digital Partner'" },
+            { id: "warna", label: "Palette Warna & Nuansa Desain", type: "text", placeholder: "Contoh: Hitam Matte dengan Emas / Navy & White" }
         ]
     },
     "Lainnya": {
@@ -82,9 +89,13 @@ const OPTIONS_DATA = {
             "Kustom"
         ],
         fields: [
-            { id: "judulUmum", label: "Judul / Topik Utama Desain", type: "text", placeholder: "Contoh: Piagam Penghargaan / Flyer Promo" },
-            { id: "deskripsiDetail", label: "Detail Deskripsi Konten", type: "textarea", placeholder: "Jelaskan seluruh konten visual dan instruksi spesifik yang diinginkan..." },
-            { id: "elemenWajib", label: "Elemen Visual / Logo Wajib", type: "text", placeholder: "Contoh: Sertakan logo instansi, stempel transparan, Bingkai Emas" }
+            { id: "judulUmum", label: "Judul / Topik Utama Desain", type: "text", placeholder: "Contoh: Piagam Penghargaan / Flyer Promo Bulanan" },
+            { id: "subJudulUmum", label: "Sub-Judul / Keterangan Pendukung", type: "text", placeholder: "Contoh: Diberikan Kepada / Diskon Spesial Akhir Tahun" },
+            { id: "deskripsiDetail", label: "Detail Isi Konten / Teks Utama", type: "textarea", placeholder: "Tuliskan seluruh narasi, isi teks, atau detail produk yang ingin dimasukkan ke desain..." },
+            { id: "kontakUmum", label: "Kontak & Media Sosial", type: "text", placeholder: "Contoh: WA: 0812-xxx | IG: @namabrand | Website" },
+            { id: "elemenWajib", label: "Elemen Visual / Logo / Gambar Wajib", type: "text", placeholder: "Contoh: Sertakan logo instansi, stempel transparan, Bingkai Emas" },
+            { id: "warna", label: "Preferensi Warna & Nuansa Visual", type: "text", placeholder: "Contoh: Dominan Merah & Emas / Pastel Minimalis" },
+            { id: "catatanKhusus", label: "Instruksi Khusus untuk AI", type: "textarea", placeholder: "Tuliskan instruksi tata letak atau estetika khusus yang diinginkan..." }
         ]
     }
 };
