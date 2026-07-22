@@ -13,7 +13,7 @@
 <body class="min-h-screen flex flex-col">
 
     <!-- Header Top Bar -->
-    <header class="border-b border-gray-800 bg-[#11131e] px-6 py-3.5 flex items-center justify-between">
+    <header class="border-b border-gray-800 bg-[#11131e] px-6 py-3.5 flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-3">
             <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-600/30">
                 <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
@@ -23,8 +23,19 @@
                 <p class="text-[11px] text-gray-400">Modular Print-Ready Design Generator</p>
             </div>
         </div>
-        <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1 rounded-full font-medium">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Modular Engine Active
+        
+        <div class="flex items-center gap-3 flex-wrap">
+            <!-- Input Groq API Key -->
+            <div class="flex items-center gap-2 bg-[#1a1d2e] border border-gray-700/80 rounded-lg px-3 py-1.5 focus-within:border-indigo-500">
+                <i class="fa-solid fa-key text-xs text-indigo-400"></i>
+                <input type="password" id="groqApiKeyInput" placeholder="Masukkan Groq API Key (gsk_...)" 
+                       class="bg-transparent text-xs text-white focus:outline-none w-48 md:w-56"
+                       onchange="saveApiKey(this.value)">
+            </div>
+
+            <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1.5 rounded-full font-medium shrink-0">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Modular Engine Active
+            </div>
         </div>
     </header>
 
