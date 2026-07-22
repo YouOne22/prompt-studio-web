@@ -151,7 +151,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
     // Visual Loading State
     generateBtn.disabled = true;
     generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan OpenRouter...`;
-    outputResult.value = "Sedang menghubungi OpenRouter AI untuk meracik prompt profesional...";
+    outputResult.value = "Sedang menghubungi AI Prompter Builder untuk meracik prompt profesional...";
 
     // 2. EKSEKUSI HYBRID SYSTEM (GROQ API)
     try {
