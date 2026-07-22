@@ -98,26 +98,27 @@ async function generatePrompt() {
     const tone = document.getElementById("toneSelect").value;
     const targetAi = document.getElementById("targetAiSelect").value;
 
-
     let size = document.getElementById("sizeSelect").value;
     if (size === "Kustom") {
         const customSize = document.getElementById("customSizeInput").value.trim();
         size = customSize !== "" ? customSize : "Kustom (Ukuran Tidak Ditentukan)";
     }
 
-    // Mengumpulkan detail dari form dinamis
+    // Mengumpulkan detail dari form dinamis (Hanya menyertakan input yang terisi)
     const dynamicInputs = document.querySelectorAll("#dynamicFormContainer [id^='dynamic_']");
     let detailsArr = [];
 
     dynamicInputs.forEach(input => {
         const val = input.value.trim();
         const label = input.getAttribute("data-label");
-        if (val) {
+        if (val !== "") {
             detailsArr.push(`- ${label}: ${val}`);
         }
     });
 
-    const detailsText = detailsArr.length > 0 ? detailsArr.join("\n") : "- Tidak ada detail tambahan.";
+    const detailsText = detailsArr.length > 0 
+        ? detailsArr.join("\n") 
+        : "- (Tidak ada detail konten tambahan yang diisi. JANGAN buatkan elemen teks tambahan).";
 
     // 1. KONTRAK META-PROMPT LOKAL
     const metaPromptText = `Anda adalah seorang Senior Art Director & Expert AI Prompt Engineer.
@@ -143,8 +144,9 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 =========================================
 1. Buat prompt gambar dalam BAHASA INGGRIS yang kaya deskripsi visual (komposisi simetris, lighting studio, ornamen berkualitas tinggi, dan skema warna harmoni).
 2. Minta AI generator gambar untuk merender JUDUL UTAMA & SUB-JUDUL secara sangat jelas di dalam tanda petik ganda.
-3. Untuk detail teks panjang (nama orang tua/alamat), sediakan area kosong bersih (clean typography whitespace zone) atau bentuk bingkai dekoratif jika terdapat instruksi foto.
-4. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.`;
+3. TATA LETAK VERTIKAL: Informasi detail acara (seperti Tanggal, Lokasi, Kontak, dll.) HARUS disusun secara VERTIKAL BERTUMPUK (stacked top-to-bottom / baris terpisah satu per satu), BUKAN berdampingan secara horizontal.
+4. ATURAN KETAT HAPUS DATA KOSONG: Abaikan dan HAPUS SELURUHNYA elemen atau data yang kosong/tidak diisi di dalam brief. Jangan membuat teks dummy atau placeholder untuk data yang tidak ada.
+5. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.`;
 
     // Visual Loading State
     generateBtn.disabled = true;
@@ -178,12 +180,11 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                // Menggunakan model gratis di OpenRouter
                 model: "google/gemma-4-26b-a4b-it:free", 
                 messages: [
                     {
                         role: "system",
-                        content: "You are a professional Art Director. Convert design briefs into single markdown code block image prompts in English."
+                        content: "You are a professional Art Director. Convert design briefs into single markdown code block image prompts in English.\n\nCRITICAL RULES:\n1. OMIT MISSING DATA: Completely exclude and omit any design elements, fields, or details that are left empty or omitted in the brief. Do NOT invent placeholders or fake text for empty fields.\n2. VERTICAL LAYOUT: For event info (date, location, contact, parent names, etc.), explicitly instruct a vertically stacked layout (top-to-bottom, line-by-line / stacked blocks) instead of placing them side-by-side in a horizontal row."
                     },
                     {
                         role: "user",
@@ -191,7 +192,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                     }
                 ],
                 temperature: 0.7,
-    max_tokens: 2000
+                max_tokens: 2000
             })
         });
 
