@@ -53,6 +53,8 @@ const formSchemas = {
         { id: "speaker", label: "Narasumber / Penceramah", placeholder: "e.g. KH. Ahmad Dahlan, M.Ag", type: "input" },
         { id: "time_place", label: "Waktu & Tempat", placeholder: "e.g. Minggu, 12 Agustus 2026 | Masjid Agung", type: "input" },
         { id: "organizer", label: "Penyelenggara / Logo", placeholder: "e.g. DKM Masjid Agung & Remaja Islam", type: "input" },
+        {id: "extra_ornaments", label: "Ornamen & Elemen Visual Tambahan (Opsional)", placeholder: "e.g. Tambahkan siluet kubah masjid 2D di latar belakang, pita emas melengkung, atau ornamen lentera Ramadan di pojok atas", 
+        type: "textarea"}
         { id: "notes", label: "Catatan Visual Khusus", placeholder: "e.g. Nuansa hijau botol, aksen ornamen islami emas", type: "textarea" }
     ],
     "Kartu Nama_Pengacara / Konsultan Hukum": [
