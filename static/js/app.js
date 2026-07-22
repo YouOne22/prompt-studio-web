@@ -153,34 +153,32 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
     generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan OpenRouter...`;
     outputResult.value = "Sedang menghubungi OpenRouter AI untuk meracik prompt profesional...";
 
-    // 2. EKSEKUSI HYBRID SYSTEM
+    // 2. EKSEKUSI HYBRID SYSTEM (GROQ API)
     try {
-        // Ambil API Key OpenRouter dari browser
-        let apiKey = localStorage.getItem("openrouter_api_key") || "";
+        // Ambil API Key Groq dari browser
+        let apiKey = localStorage.getItem("groq_api_key") || "";
 
         if (!apiKey) {
-            apiKey = prompt("Masukkan apikey");
+            apiKey = prompt("Masukkan Groq API Key Anda:");
             if (apiKey) {
                 apiKey = apiKey.trim();
-                localStorage.setItem("openrouter_api_key", apiKey);
+                localStorage.setItem("groq_api_key", apiKey);
             }
         }
 
         if (!apiKey) {
-            throw new Error("API Key tidak diisi.");
+            throw new Error("API Key Groq tidak diisi.");
         }
 
-        // Panggilan ke API OpenRouter
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        // Panggilan ke API Groq
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
-                "HTTP-Referer": window.location.origin,
-                "X-Title": "Prompt Studio",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile", 
+                model: "llama-3.3-70b-versatile", // Model super cerdas dan cepat di Groq
                 messages: [
                     {
                         role: "system",
@@ -200,7 +198,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             const errJson = await response.json().catch(() => ({}));
             // Jika Key salah / invalid, hapus dari storage browser
             if (response.status === 401) {
-                localStorage.removeItem("openrouter_api_key");
+                localStorage.removeItem("groq_api_key");
             }
             throw new Error(errJson.error?.message || `HTTP status ${response.status}`);
         }
@@ -211,14 +209,14 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         if (aiResult) {
             outputResult.value = aiResult;
         } else {
-            throw new Error("Respons OpenRouter kosong.");
+            throw new Error("Respons Groq kosong.");
         }
 
     } catch (error) {
-        console.warn("Panggilan OpenRouter API gagal/terkendala. Berpindah ke Fallback Lokal:", error.message);
+        console.warn("Panggilan Groq API gagal/terkendala. Berpindah ke Fallback Lokal:", error.message);
 
         // FALLBACK AUTOMATIC: Jika API gagal/kendala sinyal, tampilkan Meta-Prompt lokal!
-        outputResult.value = `/* [SISTEM HYBRID: API OpenRouter Offline / Perlu Key Baru] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT */\n\n` + metaPromptText;
+        outputResult.value = `/* [SISTEM HYBRID: API Groq Offline / Perlu Key Baru] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT */\n\n` + metaPromptText;
     } finally {
         generateBtn.disabled = false;
         generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
