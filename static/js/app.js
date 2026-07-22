@@ -178,7 +178,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             },
             body: JSON.stringify({
                 // Menggunakan model gratis di OpenRouter
-                model: "google/gemini-3.6-flash", 
+                model: "nvidia/nemotron-3-ultra-550b-a55b:free", 
                 messages: [
                     {
                         role: "system",
@@ -190,6 +190,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                     }
                 ],
                 temperature: 0.7
+                max_tokens: 1500
             })
         });
 
