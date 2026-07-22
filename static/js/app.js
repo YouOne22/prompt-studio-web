@@ -212,7 +212,34 @@ function toggleCustomSizeInput() {
 }
 
 // ==========================================================================
-// GENERATOR ENGINE (GROQ API WITH TRANSPARENT ERROR HANDLING)
+// HELPER: DETEKSI MODEL VISION AKTIF DARI GROQ
+// ==========================================================================
+async function getActiveGroqVisionModel(apiKey) {
+    try {
+        const res = await fetch("https://api.groq.com/openai/v1/models", {
+            headers: { "Authorization": `Bearer ${apiKey}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            // Cari model yang memiliki kata 'vision' dan masih aktif
+            const visionModels = (data.data || [])
+                .map(m => m.id)
+                .filter(id => id.toLowerCase().includes("vision"));
+            
+            if (visionModels.length > 0) {
+                // Utamakan model 90b jika ada, atau ambil vision model pertama
+                return visionModels.find(m => m.includes("90b")) || visionModels[0];
+            }
+        }
+    } catch (e) {
+        console.warn("Gagal mengecek daftar model Groq secara otomatis:", e);
+    }
+    // Fallback default jika cek API list gagal
+    return "llama-3.2-90b-vision-preview";
+}
+
+// ==========================================================================
+// GENERATOR ENGINE
 // ==========================================================================
 async function generatePrompt() {
     const generateBtn = document.getElementById("generateBtn");
@@ -280,13 +307,12 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
     // Update UI State Loading
     generateBtn.disabled = true;
-    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan Groq Vision API...`;
+    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan Groq API...`;
     outputResult.value = currentBase64Image 
-        ? "Sedang Menganalisis Gambar Referensi & Meracik Prompt..." 
+        ? "Sedang Mendeteksi Model Vision & Menganalisis Gambar..." 
         : "Sedang menghubungi AI Prompter Builder...";
 
     try {
-        // Ambil API Key dari Input Header atau LocalStorage
         let apiKey = document.getElementById("groqApiKeyInput")?.value.trim() || localStorage.getItem("groq_api_key") || "";
 
         if (!apiKey) {
@@ -304,10 +330,12 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             throw new Error("API Key Groq kosong atau belum diisi.");
         }
 
-        // Model Selection: Gunakan Llama 3.2 Vision jika ada gambar referensi
-        const selectedModel = currentBase64Image 
-    ? "llama-3.2-11b-vision-instruct" 
-    : "llama-3.3-70b-versatile";
+        // Pilihan Model Otomatis
+        let selectedModel = "llama-3.3-70b-versatile";
+        if (currentBase64Image) {
+            // Ambil model Vision yang BENAR-BENAR aktif di akun/API Groq Anda saat ini
+            selectedModel = await getActiveGroqVisionModel(apiKey);
+        }
 
         let userMessageContent;
         if (currentBase64Image) {
@@ -330,7 +358,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                 messages: [
                     {
                         role: "system",
-                        content: "You are a professional Art Director. Convert design briefs (and reference image if attached) into a single markdown code block image prompt in English.\n\nCRITICAL RULES:\n1. OMIT MISSING DATA: Completely exclude and omit any design elements, fields, or details that are left empty or omitted in the brief. Do NOT invent placeholders or fake text for empty fields.\n2. VERTICAL LAYOUT: For event info (date, location, contact, parent names, etc.), explicitly instruct a vertically stacked layout (top-to-bottom, line-by-line / stacked blocks) instead of placing them side-by-side in a horizontal row."
+                        content: "You are a professional Art Director. Convert design briefs into a single markdown code block image prompt in English."
                     },
                     {
                         role: "user",
@@ -362,8 +390,6 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
     } catch (error) {
         console.error("Gagal melakukan permintaan ke Groq API:", error);
-
-        // Menampilkan pesan error transparan + Meta Prompt jika terjadi kegagalan API
         outputResult.value = `/* [ERROR GROQ API: ${error.message}] */\n\n/* METAPROMPT LOKAL (Dapat langsung di-copy ke ChatGPT / Claude): */\n\n` + metaPromptText;
     } finally {
         generateBtn.disabled = false;
