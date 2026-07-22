@@ -179,7 +179,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             },
             body: JSON.stringify({
                 // Menggunakan model gratis di OpenRouter
-                model: "poolside/laguna-xs-2.1:free", 
+                model: "poolside/laguna-m.1:free", 
                 messages: [
                     {
                         role: "system",
