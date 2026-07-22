@@ -180,7 +180,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "google/gemma-4-26b-a4b-it:free", 
+                model: "llama-3.3-70b-versatile", 
                 messages: [
                     {
                         role: "system",
