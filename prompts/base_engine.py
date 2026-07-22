@@ -31,9 +31,9 @@ def build_art_direction_block(design_type: str, sub_style: str, orientation: str
 [LAYOUT GRID & PRINT SAFE ZONE]
 - Safe Margin: Maintain 3-5 cm inner margin for eyelets/cutting lines.
 - Hierarchy: 
-  1. Primary Focal Point (Main Title / Headline) - 40% visual area.
-  2. Secondary Focus (Sub-headline / Key Details) - 30% area.
-  3. Action & Branding (Logos, Contact, Date, Location) - 30% area.
+  1. Primary Focal Point (Main Title / Headline) – more prominent or visible than other elements, yet without being overly dominant
+  2. Secondary Focus (Sub-headline / Key Detail) – 60% smaller than the main headline
+  3. Action & Branding (Logos, Contact, Date, Location) - 40% smaller than the main headline.
 
 [ANTI-AI LOOK & QUALITY CONSTRAINTS]
 - {NEGATIVE_PROMPT_RULES}
