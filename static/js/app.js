@@ -80,7 +80,11 @@ function toggleCustomSizeInput() {
     }
 }
 
-async function generatePrompt() {
+/* ==========================================================================
+   META-PROMPT GENERATOR LOKAL (TANPA DEPENDENCY API KEY)
+   ========================================================================== */
+
+function generatePrompt() {
     const generateBtn = document.getElementById("generateBtn");
     const outputResult = document.getElementById("outputResult");
 
@@ -105,50 +109,49 @@ async function generatePrompt() {
         const val = input.value.trim();
         const label = input.getAttribute("data-label");
         if (val) {
-            detailsArr.push(`• ${label}:${val}`);
+            detailsArr.push(`- ${label}: ${val}`);
         }
     });
 
-    const detailsText = detailsArr.length > 0 ? detailsArr.join("\n") : "Tidak ada detail spesifik dikirim.";
+    const detailsText = detailsArr.length > 0 ? detailsArr.join("\n") : "- Tidak ada detail tambahan.";
 
-    const payload = {
-        design_type: designType,
-        sub_style: subStyle,
-        orientation: orientation,
-        size: size,
-        render_mode: renderMode,
-        tone: tone,
-        target_ai: targetAi,
-        details: detailsText
-    };
-
-    // UI Loading state
+    // Efek Animasi Tombol
     generateBtn.disabled = true;
-    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Meracik Prompt...`;
-    outputResult.value = "Sedang meracik prompt profesional anti-AI look...";
+    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Meracik Meta-Prompt...`;
 
-    try {
-        const response = await fetch("/api/generate", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
+    setTimeout(() => {
+        // Konstruksi Meta-Prompt Siap Tempel ke LLM (ChatGPT/Claude/Gemini)
+        const metaPrompt = `Anda adalah seorang Senior Art Director & Expert AI Prompt Engineer.
 
-        const data = await response.json();
-        if (data.status === "success") {
-            outputResult.value = data.prompt;
-        } else {
-            outputResult.value = "Gagal memproses prompt. Silakan coba lagi.";
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        outputResult.value = "Terjadi kesalahan koneksi ke server.";
-    } finally {
+Tugas Anda adalah menerjemahkan brief desain cetak/grafis di bawah ini menjadi 1 MASTER PROMPT GAMBAR (dalam Bahasa Inggris) yang sangat detail, profesional, dan siap digunakan pada generator AI [${targetAi}].
+
+=========================================
+BRIEF DESAIN LENGKAP:
+=========================================
+• Jenis Desain        : ${designType}
+• Modul / Sub-Gaya   : ${subStyle}
+• Orientasi Tata Letak : ${orientation}
+• Dimensi / Ukuran   : ${size}
+• Mode Render Visual  : ${renderMode}
+• Tone & Nuansa      : ${tone}
+• Target Engine AI   : ${targetAi}
+
+DETAIL KONTEN & ELEMEN DESAIN:
+${detailsText}
+
+=========================================
+INSTRUKSI PENGERJAAN PROMPT:
+=========================================
+1. Buat prompt gambar dalam BAHASA INGGRIS yang kaya deskripsi visual (mengatur komposisi visual, tata letak elemen, hirarki tipografi, skema warna harmoni, lighting studio, serta gaya artistik anti-AI look).
+2. Sesuaikan format prompt dengan karakteristik platform [${targetAi}] (misalnya sertakan parameter aspek rasio jika menggunakan Midjourney).
+3. Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka, penjelasan, atau penutup.`;
+
+        outputResult.value = metaPrompt;
+
+        // Reset Tombol
         generateBtn.disabled = false;
         generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
-    }
+    }, 300);
 }
 
 function copyToClipboard() {
@@ -157,20 +160,20 @@ function copyToClipboard() {
 
     outputResult.select();
     navigator.clipboard.writeText(outputResult.value).then(() => {
-        alert("Prompt berhasil disalin ke clipboard!");
+        alert("Meta-prompt berhasil disalin! Silakan tempel di ChatGPT / Claude / Gemini.");
     }).catch(err => {
         console.error("Gagal menyalin: ", err);
     });
 }
 
 /* ==========================================================================
-   FITUR TAMBAHAN: SIMPAN & RIWAYAT BRIEF
+   FITUR SIMPAN & RIWAYAT BRIEF
    ========================================================================== */
 
 function saveCurrentBrief() {
     const outputResult = document.getElementById("outputResult").value;
 
-    if (!outputResult || outputResult.includes("Sedang meracik prompt")) {
+    if (!outputResult || outputResult.includes("Meracik Meta-Prompt")) {
         alert("Belum ada prompt hasil generate yang bisa disimpan!");
         return;
     }
@@ -281,7 +284,7 @@ function loadBrief(id) {
 
     // 1. Set Parameter Utama & Trigger Pembentukan Form Dinamis
     document.getElementById("designTypeSelect").value = brief.params.designType;
-    onSidebarChange(); // Secara otomatis meregenerasi dropdown subStyle, size, dan form dinamis
+    onSidebarChange();
 
     // 2. Set Dropdown Lainnya
     document.getElementById("subStyleSelect").value = brief.params.subStyle;
