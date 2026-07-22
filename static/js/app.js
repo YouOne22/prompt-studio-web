@@ -84,7 +84,7 @@ function toggleCustomSizeInput() {
 }
 
 /* ==========================================================================
-   HYBRID GENERATOR (OPENAI API PRIMARY -> LOCAL FALLBACK)
+   HYBRID GENERATOR (OPENROUTER API PRIMARY -> LOCAL FALLBACK)
    ========================================================================== */
 
 async function generatePrompt() {
@@ -147,19 +147,19 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
     // Visual Loading State
     generateBtn.disabled = true;
-    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan OpenAI...`;
-    outputResult.value = "Sedang menghubungi OpenAI API untuk meracik prompt profesional...";
+    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan OpenRouter...`;
+    outputResult.value = "Sedang menghubungi OpenRouter AI untuk meracik prompt profesional...";
 
     // 2. EKSEKUSI HYBRID SYSTEM
     try {
-        // Ambil API Key dari storage browser, jika belum ada minta input dari user
-        let apiKey = localStorage.getItem("openai_api_key") || "";
+        // Ambil API Key OpenRouter dari browser
+        let apiKey = localStorage.getItem("openrouter_api_key") || "";
 
         if (!apiKey) {
-            apiKey = prompt("Masukkan OpenAI API Key Anda (tersimpan aman di browser lokal):");
+            apiKey = prompt("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");
             if (apiKey) {
                 apiKey = apiKey.trim();
-                localStorage.setItem("openai_api_key", apiKey);
+                localStorage.setItem("openrouter_api_key", apiKey);
             }
         }
 
@@ -167,15 +167,18 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             throw new Error("API Key tidak diisi.");
         }
 
-        // Panggilan ke API OpenAI (Model gpt-4o-mini)
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        // Panggilan ke API OpenRouter
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`
+                "Authorization": `Bearer ${apiKey}`,
+                "HTTP-Referer": window.location.origin,
+                "X-Title": "Prompt Studio",
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini",
+                // Menggunakan model gratis di OpenRouter
+                model: "google/gemini-2.0-flash-exp:free", 
                 messages: [
                     {
                         role: "system",
@@ -192,9 +195,9 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
         if (!response.ok) {
             const errJson = await response.json().catch(() => ({}));
-            // Jika Key salah / kadaluarsa, hapus dari storage browser agar nanti diminta ulang
+            // Jika Key salah / invalid, hapus dari storage browser
             if (response.status === 401) {
-                localStorage.removeItem("openai_api_key");
+                localStorage.removeItem("openrouter_api_key");
             }
             throw new Error(errJson.error?.message || `HTTP status ${response.status}`);
         }
@@ -205,14 +208,14 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         if (aiResult) {
             outputResult.value = aiResult;
         } else {
-            throw new Error("Respons OpenAI kosong.");
+            throw new Error("Respons OpenRouter kosong.");
         }
 
     } catch (error) {
-        console.warn("Panggilan OpenAI API gagal/terkendala. Berpindah ke Fallback Lokal:", error.message);
+        console.warn("Panggilan OpenRouter API gagal/terkendala. Berpindah ke Fallback Lokal:", error.message);
 
-        // FALLBACK AUTOMATIC: Jika API gagal, tampilkan Meta-Prompt lokal secara instan!
-        outputResult.value = `/* [SISTEM HYBRID: API OpenAI Offline/Saldo Kosong] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT */\n\n` + metaPromptText;
+        // FALLBACK AUTOMATIC: Jika API gagal/kendala sinyal, tampilkan Meta-Prompt lokal!
+        outputResult.value = `/* [SISTEM HYBRID: API OpenRouter Offline / Perlu Key Baru] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT */\n\n` + metaPromptText;
     } finally {
         generateBtn.disabled = false;
         generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
@@ -238,7 +241,7 @@ function copyToClipboard() {
 function saveCurrentBrief() {
     const outputResult = document.getElementById("outputResult").value;
 
-    if (!outputResult || outputResult.includes("Menghubungkan OpenAI")) {
+    if (!outputResult || outputResult.includes("Menghubungkan OpenRouter")) {
         alert("Belum ada prompt hasil generate yang bisa disimpan!");
         return;
     }
