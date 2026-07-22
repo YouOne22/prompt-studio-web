@@ -1,3 +1,7 @@
+// ==========================================================================
+// CONFIGURATION: Tempelkan API Key OpenAI Anda di bawah ini
+// ==========================================================================
+const OPENAI_API_KEY = localStorage.getItem("openai_api_key") || "";
 const STORAGE_KEY = "prompt_studio_saved_briefs";
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -81,10 +85,10 @@ function toggleCustomSizeInput() {
 }
 
 /* ==========================================================================
-   META-PROMPT GENERATOR LOKAL (OPTIMISED FOR DALL-E 3 & LLM REFINEMENT)
+   HYBRID GENERATOR (OPENAI API PRIMARY -> LOCAL FALLBACK)
    ========================================================================== */
 
-function generatePrompt() {
+async function generatePrompt() {
     const generateBtn = document.getElementById("generateBtn");
     const outputResult = document.getElementById("outputResult");
 
@@ -115,13 +119,8 @@ function generatePrompt() {
 
     const detailsText = detailsArr.length > 0 ? detailsArr.join("\n") : "- Tidak ada detail tambahan.";
 
-    // Efek Animasi Tombol
-    generateBtn.disabled = true;
-    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Meracik Meta-Prompt...`;
-
-    setTimeout(() => {
-        // Konstruksi Meta-Prompt Siap Tempel ke LLM (ChatGPT/Claude/Gemini)
-        const metaPrompt = `Anda adalah seorang Senior Art Director & Expert AI Prompt Engineer.
+    // 1. KONTRAK META-PROMPT LOKAL
+    const metaPromptText = `Anda adalah seorang Senior Art Director & Expert AI Prompt Engineer.
 
 Tugas Anda adalah menerjemahkan brief desain cetak/grafis di bawah ini menjadi 1 MASTER PROMPT GAMBAR (dalam Bahasa Inggris) yang sangat detail, profesional, dan siap digunakan pada generator AI [${targetAi}].
 
@@ -142,29 +141,68 @@ ${detailsText}
 =========================================
 INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 =========================================
-1. KUALITAS & GAYA VISUAL:
-   - Buat prompt dalam BAHASA INGGRIS yang kaya deskripsi visual (komposisi simetris/harmonis, lighting studio lembut, ornamen visual berkualitas tinggi, serta skema warna harmoni sesuai brief).
-   - Pastikan hasilnya terlihat profesional, rapi, dan anti-AI look (siap cetak/siap pakai).
+1. Buat prompt gambar dalam BAHASA INGGRIS yang kaya deskripsi visual (komposisi simetris, lighting studio, ornamen berkualitas tinggi, dan skema warna harmoni).
+2. Minta AI generator gambar untuk merender JUDUL UTAMA & SUB-JUDUL secara sangat jelas di dalam tanda petik ganda.
+3. Untuk detail teks panjang (nama orang tua/alamat), sediakan area kosong bersih (clean typography whitespace zone) atau bentuk bingkai dekoratif jika terdapat instruksi foto.
+4. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.`;
 
-2. PENANGANAN TEKS (TYPO-PROOFING):
-   - Minta AI generator gambar untuk merender JUDUL UTAMA & SUB-JUDUL secara sangat jelas di dalam tanda petik ganda.
-   - Untuk detail teks yang panjang (seperti nama orang tua, tanggal, dan alamat lengkap), instruksikan AI untuk membuat tata letak tipografi yang rapi dan bersih (clean whitespace typography zone), atau sediakan spasi banner yang mudah disunting.
+    // Visual Loading State
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan OpenAI...`;
+    outputResult.value = "Sedang menghubungi OpenAI API untuk meracik prompt profesional...";
 
-3. PENANGANAN FOTO / PLACEHOLDER:
-   - Jika terdapat instruksi penyertaan foto pada brief, instruksikan AI untuk merancang "an elegant decorative golden frame / circular photo frame placeholder" di posisi yang sesuai (misal di sebelah kanan/kiri) agar foto asli dapat dimasukkan dengan rapi saat editing.
+    // 2. EKSEKUSI HYBRID SYSTEM
+    try {
+        if (!OPENAI_API_KEY || OPENAI_API_KEY.includes("MASUKKAN_API_KEY_BARU_ANDA_DI_SINI")) {
+            throw new Error("API Key belum disetting.");
+        }
 
-4. FORMAT & ASPEK RASIO:
-   - Sesuaikan instruksi tata letak dengan jenis orientasi [${orientation}] dan dimensi [${size}] (contoh: gunakan format wide landscape banner untuk spanduk 300x200 cm).
+        // Panggilan ke API OpenAI (Model gpt-4o-mini)
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are a professional Art Director. Convert design briefs into single markdown code block image prompts in English."
+                    },
+                    {
+                        role: "user",
+                        content: metaPromptText
+                    }
+                ],
+                temperature: 0.7
+            })
+        });
 
-5. OUTPUT UTAMA:
-   - Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka, penjelasan, atau penutup.`;
+        if (!response.ok) {
+            const errJson = await response.json().catch(() => ({}));
+            throw new Error(errJson.error?.message || `HTTP status ${response.status}`);
+        }
 
-        outputResult.value = metaPrompt;
+        const data = await response.json();
+        const aiResult = data.choices[0]?.message?.content;
 
-        // Reset Tombol
+        if (aiResult) {
+            outputResult.value = aiResult;
+        } else {
+            throw new Error("Respons OpenAI kosong.");
+        }
+
+    } catch (error) {
+        console.warn("Panggilan OpenAI API gagal/terkendala. Berpindah ke Fallback Lokal:", error.message);
+
+        // FALLBACK AUTOMATIC: Jika API gagal, tampilkan Meta-Prompt lokal secara instan!
+        outputResult.value = `/* [SISTEM HYBRID: API OpenAI Offline/Saldo Kosong] */\n/* Menampilkan Meta-Prompt Siap Tempel ke ChatGPT */\n\n` + metaPromptText;
+    } finally {
         generateBtn.disabled = false;
         generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
-    }, 300);
+    }
 }
 
 function copyToClipboard() {
@@ -173,7 +211,7 @@ function copyToClipboard() {
 
     outputResult.select();
     navigator.clipboard.writeText(outputResult.value).then(() => {
-        alert("Meta-prompt berhasil disalin! Silakan tempel di ChatGPT / Claude / Gemini.");
+        alert("Prompt berhasil disalin ke clipboard!");
     }).catch(err => {
         console.error("Gagal menyalin: ", err);
     });
@@ -186,7 +224,7 @@ function copyToClipboard() {
 function saveCurrentBrief() {
     const outputResult = document.getElementById("outputResult").value;
 
-    if (!outputResult || outputResult.includes("Meracik Meta-Prompt")) {
+    if (!outputResult || outputResult.includes("Menghubungkan OpenAI")) {
         alert("Belum ada prompt hasil generate yang bisa disimpan!");
         return;
     }
@@ -200,7 +238,6 @@ function saveCurrentBrief() {
     const tone = document.getElementById("toneSelect").value;
     const targetAi = document.getElementById("targetAiSelect").value;
 
-    // Ambil nilai seluruh form dinamis
     const dynamicInputs = document.querySelectorAll("#dynamicFormContainer [id^='dynamic_']");
     const dynamicFields = {};
     let sampleTitle = "";
@@ -295,11 +332,11 @@ function loadBrief(id) {
 
     if (!brief) return;
 
-    // 1. Set Parameter Utama & Trigger Pembentukan Form Dinamis
+    // 1. Set Parameter Utama
     document.getElementById("designTypeSelect").value = brief.params.designType;
     onSidebarChange();
 
-    // 2. Set Dropdown Lainnya
+    // 2. Set Dropdown
     document.getElementById("subStyleSelect").value = brief.params.subStyle;
     document.getElementById("orientationSelect").value = brief.params.orientation;
     document.getElementById("sizeSelect").value = brief.params.size;
@@ -310,7 +347,7 @@ function loadBrief(id) {
     document.getElementById("toneSelect").value = brief.params.tone;
     document.getElementById("targetAiSelect").value = brief.params.targetAi;
 
-    // 3. Kembalikan Isian Form Dinamis
+    // 3. Kembalikan Dynamic Fields
     if (brief.dynamicFields) {
         for (const [fieldId, val] of Object.entries(brief.dynamicFields)) {
             const inputElem = document.getElementById(fieldId);
@@ -320,10 +357,9 @@ function loadBrief(id) {
         }
     }
 
-    // 4. Kembalikan Teks Prompt Output
+    // 4. Restore Output
     document.getElementById("outputResult").value = brief.outputPrompt || "";
 
-    // Tutup Modal
     closeHistoryModal();
 }
 
