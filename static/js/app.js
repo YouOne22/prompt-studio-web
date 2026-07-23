@@ -240,7 +240,7 @@ async function getActiveGroqVisionModel(apiKey) {
     } catch (e) {
         console.warn("Gagal mengecek daftar model Groq secara otomatis:", e);
     }
-    return "llama-3.2-11b-vision-preview";
+    return "qwen/qwen3.6-27b-vision-preview";
 }
 
 // ==========================================================================
@@ -366,7 +366,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
     generateBtn.disabled = true;
     generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan Groq API...`;
     outputResult.value = currentBase64Image 
-        ? "Sedang Mendeteksi Model Vision & Menganalisis Gambar..." 
+        ? "Sedang Mendeteksi  Vision & Menganalisis Gambar..." 
         : "Sedang menghubungi AI Prompter Builder...";
 
     try {
@@ -387,8 +387,8 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             throw new Error("API Key Groq kosong atau belum diisi.");
         }
 
-        // Pilihan Model Otomatis
-        let selectedModel = "llama-3.3-70b-versatile";
+        // Pilihan  Otomatis
+        let selectedModel = "qwen/qwen3.6-27b";
         if (currentBase64Image) {
             selectedModel = await getActiveGroqVisionModel(apiKey);
         }
