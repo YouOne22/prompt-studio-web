@@ -3,8 +3,9 @@
 // ==========================================================================
 const STORAGE_KEY = "prompt_studio_saved_briefs";
 let currentBase64Image = null; // Menyimpan data gambar terkompresi dalam format base64
+let isGenerating = false;     // Flag pelacak status proses API
 
-// Daftar Kunci Akses Cadangan (digunakan jika backend API /api/verify-key belum siap)
+// Daftar Kunci Akses Cadangan
 const LOCAL_VALID_KEYS = [
     "KEY-ADMIN-123",
     "KEY-VIP-12345",
@@ -39,13 +40,25 @@ function saveApiKey(val) {
     }
 }
 
+// Helper Sanitasi Teks untuk Mencegah Broken HTML / XSS
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // ==========================================================================
 // HELPER: KOMPRESI GAMBAR BASE64 UNTUK VISION API
 // ==========================================================================
 function compressImageBase64(base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
     return new Promise((resolve) => {
         const img = new Image();
-        img.src = base64Str;
+        
+        // KOREKSI: Pasang handler event SEBELUM menentukan img.src
         img.onload = () => {
             let width = img.width;
             let height = img.height;
@@ -66,10 +79,11 @@ function compressImageBase64(base64Str, maxWidth = 1024, maxHeight = 1024, quali
             const ctx = canvas.getContext("2d");
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Export ke JPEG dengan kompresi kualitas
             resolve(canvas.toDataURL("image/jpeg", quality));
         };
-        img.onerror = () => resolve(base64Str); // Fallback ke original jika gagal
+        
+        img.onerror = () => resolve(base64Str); // Fallback jika gagal
+        img.src = base64Str; // Set src di bagian paling akhir
     });
 }
 
@@ -93,13 +107,20 @@ async function handleImageUpload(event) {
     const reader = new FileReader();
     reader.onload = async function (e) {
         const rawBase64 = e.target.result;
-        // Kompres gambar secara otomatis agar payload aman di Groq Vision API
         currentBase64Image = await compressImageBase64(rawBase64);
 
-        document.getElementById("imagePreview").src = currentBase64Image;
-        document.getElementById("imageFileName").textContent = file.name;
-        document.getElementById("uploadPlaceholder").classList.add("hidden");
-        document.getElementById("imagePreviewContainer").classList.remove("hidden");
+        const imgPreview = document.getElementById("imagePreview");
+        const fileNameLabel = document.getElementById("imageFileName");
+        const placeholder = document.getElementById("uploadPlaceholder");
+        const previewContainer = document.getElementById("imagePreviewContainer");
+
+        if (imgPreview) imgPreview.src = currentBase64Image;
+        if (fileNameLabel) fileNameLabel.textContent = file.name;
+        if (placeholder) placeholder.classList.add("hidden");
+        if (previewContainer) previewContainer.classList.remove("hidden");
+    };
+    reader.onerror = function () {
+        alert("Gagal membaca file gambar.");
     };
     reader.readAsDataURL(file);
 }
@@ -110,10 +131,15 @@ function removeImage(event) {
     const input = document.getElementById("imageInput");
     if (input) input.value = "";
     
-    document.getElementById("imagePreview").src = "";
-    document.getElementById("imageFileName").textContent = "";
-    document.getElementById("uploadPlaceholder").classList.remove("hidden");
-    document.getElementById("imagePreviewContainer").classList.add("hidden");
+    const imgPreview = document.getElementById("imagePreview");
+    const fileNameLabel = document.getElementById("imageFileName");
+    const placeholder = document.getElementById("uploadPlaceholder");
+    const previewContainer = document.getElementById("imagePreviewContainer");
+
+    if (imgPreview) imgPreview.src = "";
+    if (fileNameLabel) fileNameLabel.textContent = "";
+    if (placeholder) placeholder.classList.remove("hidden");
+    if (previewContainer) previewContainer.classList.add("hidden");
 }
 
 // ==========================================================================
@@ -133,23 +159,25 @@ function onSidebarChange() {
             ? OPTIONS_DATA["Lainnya"] 
             : { subStyles: ["Umum / Standard"], sizes: ["A3", "Kustom"] };
 
-    // Populate Sub-Style
-    subStyleSelect.innerHTML = "";
-    (options.subStyles || []).forEach(style => {
-        const opt = document.createElement("option");
-        opt.value = style;
-        opt.textContent = style;
-        subStyleSelect.appendChild(opt);
-    });
+    if (subStyleSelect) {
+        subStyleSelect.innerHTML = "";
+        (options.subStyles || []).forEach(style => {
+            const opt = document.createElement("option");
+            opt.value = style;
+            opt.textContent = style;
+            subStyleSelect.appendChild(opt);
+        });
+    }
 
-    // Populate Size Presets
-    sizeSelect.innerHTML = "";
-    (options.sizes || []).forEach(sz => {
-        const opt = document.createElement("option");
-        opt.value = sz;
-        opt.textContent = sz;
-        sizeSelect.appendChild(opt);
-    });
+    if (sizeSelect) {
+        sizeSelect.innerHTML = "";
+        (options.sizes || []).forEach(sz => {
+            const opt = document.createElement("option");
+            opt.value = sz;
+            opt.textContent = sz;
+            sizeSelect.appendChild(opt);
+        });
+    }
 
     toggleCustomSizeInput();
     onSubStyleChange();
@@ -240,7 +268,7 @@ async function getActiveGroqVisionModel(apiKey) {
     } catch (e) {
         console.warn("Gagal mengecek daftar model Groq secara otomatis:", e);
     }
-    return "qwen/qwen3.6-27b-vision-preview";
+    return "llama-3.2-11b-vision-preview";
 }
 
 // ==========================================================================
@@ -248,7 +276,7 @@ async function getActiveGroqVisionModel(apiKey) {
 // ==========================================================================
 async function generatePrompt() {
     // ----------------------------------------------------------------------
-    // STEP 1: VERIFIKASI KODE AKSES PENGGUNA TERLEBIH DAHULU
+    // STEP 1: VERIFIKASI KODE AKSES PENGGUNA
     // ----------------------------------------------------------------------
     let accessKey = localStorage.getItem("user_access_key");
 
@@ -264,7 +292,6 @@ async function generatePrompt() {
         return;
     }
 
-    // Proses Verifikasi (Backend First, fallback ke Local Check)
     let isKeyValid = false;
 
     try {
@@ -277,7 +304,6 @@ async function generatePrompt() {
         if (verifyRes.ok) {
             isKeyValid = true;
         } else if (verifyRes.status === 404) {
-            // Endpoint backend tidak ditemukan, gunakan fallback lokal
             isKeyValid = LOCAL_VALID_KEYS.includes(accessKey);
         } else {
             isKeyValid = false;
@@ -293,7 +319,6 @@ async function generatePrompt() {
         return;
     }
 
-    // Simpan kunci yang terverifikasi
     localStorage.setItem("user_access_key", accessKey);
 
     // ----------------------------------------------------------------------
@@ -302,20 +327,21 @@ async function generatePrompt() {
     const generateBtn = document.getElementById("generateBtn");
     const outputResult = document.getElementById("outputResult");
 
-    const designType = document.getElementById("designTypeSelect").value;
-    const subStyle = document.getElementById("subStyleSelect").value;
-    const orientation = document.getElementById("orientationSelect").value;
-    const renderMode = document.getElementById("renderModeSelect").value;
-    const tone = document.getElementById("toneSelect").value;
-    const targetAi = document.getElementById("targetAiSelect").value;
+    if (!outputResult) return;
 
-    let size = document.getElementById("sizeSelect").value;
+    const designType = document.getElementById("designTypeSelect")?.value || "Poster";
+    const subStyle = document.getElementById("subStyleSelect")?.value || "Standard";
+    const orientation = document.getElementById("orientationSelect")?.value || "Vertical";
+    const renderMode = document.getElementById("renderModeSelect")?.value || "Realistic";
+    const tone = document.getElementById("toneSelect")?.value || "Professional";
+    const targetAi = document.getElementById("targetAiSelect")?.value || "Midjourney";
+
+    let size = document.getElementById("sizeSelect")?.value || "A3";
     if (size === "Kustom") {
         const customSize = document.getElementById("customSizeInput")?.value.trim();
         size = customSize !== "" ? customSize : "Kustom (Ukuran Tidak Ditentukan)";
     }
 
-    // Mengumpulkan input dinamis terisi
     const dynamicInputs = document.querySelectorAll("#dynamicFormContainer [id^='dynamic_']");
     let detailsArr = [];
 
@@ -362,11 +388,15 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 4. ATURAN KETAT HAPUS DATA KOSONG: Abaikan dan HAPUS SELURUHNYA elemen atau data yang kosong/tidak diisi di dalam brief. Jangan membuat teks dummy atau placeholder untuk data yang tidak ada.
 5. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.${imageInstruction}`;
 
-    // Update UI State Loading
-    generateBtn.disabled = true;
-    generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan Groq API...`;
+    // Update Flag State Loading
+    isGenerating = true;
+    if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan Groq API...`;
+    }
+    
     outputResult.value = currentBase64Image 
-        ? "Sedang Mendeteksi  Vision & Menganalisis Gambar..." 
+        ? "Sedang Mendeteksi Vision & Menganalisis Gambar..." 
         : "Sedang menghubungi AI Prompter Builder...";
 
     try {
@@ -387,8 +417,8 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             throw new Error("API Key Groq kosong atau belum diisi.");
         }
 
-        // Pilihan  Otomatis
-        let selectedModel = "qwen/qwen3.6-27b";
+        // KOREKSI: Default model text-only diganti ke model Groq standar yang stabil
+        let selectedModel = "llama-3.3-70b-versatile";
         if (currentBase64Image) {
             selectedModel = await getActiveGroqVisionModel(apiKey);
         }
@@ -448,15 +478,18 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         console.error("Gagal melakukan permintaan ke Groq API:", error);
         outputResult.value = `/* [ERROR GROQ API: ${error.message}] */\n\n/* METAPROMPT LOKAL (Dapat langsung di-copy ke ChatGPT / Claude): */\n\n` + metaPromptText;
     } finally {
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
+        isGenerating = false;
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Generate Optimised Prompt`;
+        }
     }
 }
 
 function copyToClipboard() {
     const outputResult = document.getElementById("outputResult");
-    if (!outputResult || !outputResult.value.trim()) {
-        alert("Belum ada teks prompt untuk disalin!");
+    if (!outputResult || !outputResult.value.trim() || isGenerating) {
+        alert("Belum ada teks prompt hasil generate untuk disalin!");
         return;
     }
 
@@ -473,21 +506,23 @@ function copyToClipboard() {
 // FITUR SIMPAN & RIWAYAT BRIEF
 // ==========================================================================
 function saveCurrentBrief() {
-    const outputResult = document.getElementById("outputResult").value;
+    const outputResultElem = document.getElementById("outputResult");
+    const outputResult = outputResultElem ? outputResultElem.value : "";
 
-    if (!outputResult || outputResult.includes("Menghubungkan Groq Vision API")) {
-        alert("Belum ada prompt hasil generate yang bisa disimpan!");
+    // KOREKSI: Gunakan flag isGenerating untuk mencegah penyimpanan saat proses belum selesai
+    if (isGenerating || !outputResult.trim() || outputResult.startsWith("Sedang ")) {
+        alert("Belum ada prompt hasil generate yang valid untuk disimpan!");
         return;
     }
 
-    const designType = document.getElementById("designTypeSelect").value;
-    const subStyle = document.getElementById("subStyleSelect").value;
-    const orientation = document.getElementById("orientationSelect").value;
-    const sizeSelectVal = document.getElementById("sizeSelect").value;
+    const designType = document.getElementById("designTypeSelect")?.value || "Desain";
+    const subStyle = document.getElementById("subStyleSelect")?.value || "";
+    const orientation = document.getElementById("orientationSelect")?.value || "";
+    const sizeSelectVal = document.getElementById("sizeSelect")?.value || "";
     const customSizeVal = document.getElementById("customSizeInput")?.value || "";
-    const renderMode = document.getElementById("renderModeSelect").value;
-    const tone = document.getElementById("toneSelect").value;
-    const targetAi = document.getElementById("targetAiSelect").value;
+    const renderMode = document.getElementById("renderModeSelect")?.value || "";
+    const tone = document.getElementById("toneSelect")?.value || "";
+    const targetAi = document.getElementById("targetAiSelect")?.value || "";
 
     const dynamicInputs = document.querySelectorAll("#dynamicFormContainer [id^='dynamic_']");
     const dynamicFields = {};
@@ -529,22 +564,24 @@ function saveCurrentBrief() {
     if (saveBtn) {
         const originalContent = saveBtn.innerHTML;
         saveBtn.innerHTML = `<i class="fa-solid fa-check"></i> Tersimpan`;
-        saveBtn.classList.replace("bg-emerald-600", "bg-emerald-700");
+        saveBtn.classList.add("bg-emerald-700");
 
         setTimeout(() => {
             saveBtn.innerHTML = originalContent;
-            saveBtn.classList.replace("bg-emerald-700", "bg-emerald-600");
+            saveBtn.classList.remove("bg-emerald-700");
         }, 1500);
     }
 }
 
 function openHistoryModal() {
     renderHistory();
-    document.getElementById("historyModal").classList.remove("hidden");
+    const modal = document.getElementById("historyModal");
+    if (modal) modal.classList.remove("hidden");
 }
 
 function closeHistoryModal() {
-    document.getElementById("historyModal").classList.add("hidden");
+    const modal = document.getElementById("historyModal");
+    if (modal) modal.classList.add("hidden");
 }
 
 function renderHistory() {
@@ -561,17 +598,18 @@ function renderHistory() {
         return;
     }
 
+    // KOREKSI: Gunakan escapeHtml() untuk mencegah broken layout / XSS
     historyList.innerHTML = savedBriefs.map(brief => `
         <div class="bg-[#1a1d2e] border border-gray-800 hover:border-gray-700 rounded-lg p-3 flex items-center justify-between transition gap-2">
             <div class="space-y-1 overflow-hidden">
                 <div class="text-xs font-bold text-white truncate flex items-center gap-1.5">
                     ${brief.imageRef ? '<i class="fa-solid fa-image text-indigo-400 text-[11px]"></i>' : ''}
-                    ${brief.title}
+                    ${escapeHtml(brief.title)}
                 </div>
                 <div class="text-[10px] text-gray-400 flex items-center gap-1.5 flex-wrap">
-                    <span class="bg-indigo-900/60 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-700/50">${brief.params.designType}</span>
-                    <span class="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded border border-gray-700">${brief.params.targetAi}</span>
-                    <span>• ${brief.date}</span>
+                    <span class="bg-indigo-900/60 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-700/50">${escapeHtml(brief.params.designType)}</span>
+                    <span class="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded border border-gray-700">${escapeHtml(brief.params.targetAi)}</span>
+                    <span>• ${escapeHtml(brief.date)}</span>
                 </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
@@ -592,27 +630,46 @@ function loadBrief(id) {
 
     if (!brief) return;
 
-    document.getElementById("designTypeSelect").value = brief.params.designType;
-    onSidebarChange();
-
-    document.getElementById("subStyleSelect").value = brief.params.subStyle;
-    document.getElementById("orientationSelect").value = brief.params.orientation;
-    document.getElementById("sizeSelect").value = brief.params.size;
-    if (document.getElementById("customSizeInput")) {
-        document.getElementById("customSizeInput").value = brief.params.customSize || "";
+    const designTypeSelect = document.getElementById("designTypeSelect");
+    if (designTypeSelect) {
+        designTypeSelect.value = brief.params.designType;
+        onSidebarChange();
     }
+
+    const subStyleSelect = document.getElementById("subStyleSelect");
+    if (subStyleSelect) subStyleSelect.value = brief.params.subStyle;
+
+    const orientationSelect = document.getElementById("orientationSelect");
+    if (orientationSelect) orientationSelect.value = brief.params.orientation;
+
+    const sizeSelect = document.getElementById("sizeSelect");
+    if (sizeSelect) sizeSelect.value = brief.params.size;
+
+    const customSizeInput = document.getElementById("customSizeInput");
+    if (customSizeInput) customSizeInput.value = brief.params.customSize || "";
+    
     toggleCustomSizeInput();
 
-    document.getElementById("renderModeSelect").value = brief.params.renderMode;
-    document.getElementById("toneSelect").value = brief.params.tone;
-    document.getElementById("targetAiSelect").value = brief.params.targetAi;
+    const renderModeSelect = document.getElementById("renderModeSelect");
+    if (renderModeSelect) renderModeSelect.value = brief.params.renderMode;
+
+    const toneSelect = document.getElementById("toneSelect");
+    if (toneSelect) toneSelect.value = brief.params.tone;
+
+    const targetAiSelect = document.getElementById("targetAiSelect");
+    if (targetAiSelect) targetAiSelect.value = brief.params.targetAi;
 
     if (brief.imageRef) {
         currentBase64Image = brief.imageRef;
-        document.getElementById("imagePreview").src = currentBase64Image;
-        document.getElementById("imageFileName").textContent = "Gambar Referensi Tersimpan";
-        document.getElementById("uploadPlaceholder").classList.add("hidden");
-        document.getElementById("imagePreviewContainer").classList.remove("hidden");
+        const imgPreview = document.getElementById("imagePreview");
+        const fileNameLabel = document.getElementById("imageFileName");
+        const placeholder = document.getElementById("uploadPlaceholder");
+        const previewContainer = document.getElementById("imagePreviewContainer");
+
+        if (imgPreview) imgPreview.src = currentBase64Image;
+        if (fileNameLabel) fileNameLabel.textContent = "Gambar Referensi Tersimpan";
+        if (placeholder) placeholder.classList.add("hidden");
+        if (previewContainer) previewContainer.classList.remove("hidden");
     } else {
         removeImage();
     }
@@ -626,7 +683,8 @@ function loadBrief(id) {
         }
     }
 
-    document.getElementById("outputResult").value = brief.outputPrompt || "";
+    const outputResult = document.getElementById("outputResult");
+    if (outputResult) outputResult.value = brief.outputPrompt || "";
 
     closeHistoryModal();
 }
