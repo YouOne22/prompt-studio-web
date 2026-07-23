@@ -248,27 +248,32 @@ function toggleCustomSizeInput() {
 }
 
 // ==========================================================================
-// HELPER: DETEKSI MODEL VISION AKTIF DARI GROQ
+// HELPER: DETEKSI MODEL VISION AKTIF DARI GROQ (UPDATED)
 // ==========================================================================
 async function getActiveGroqVisionModel(apiKey) {
     try {
         const res = await fetch("https://api.groq.com/openai/v1/models", {
             headers: { "Authorization": `Bearer ${apiKey}` }
         });
+        
         if (res.ok) {
             const data = await res.json();
+            // Filter hanya model yang mendukung Vision & tidak ter-deprecate
             const visionModels = (data.data || [])
                 .map(m => m.id)
-                .filter(id => id.toLowerCase().includes("vision"));
+                .filter(id => id.toLowerCase().includes("vision") && !id.includes("preview"));
             
             if (visionModels.length > 0) {
+                // Utamakan model 90b jika ada, jika tidak pakai model vision pertama yang aktif
                 return visionModels.find(m => m.includes("90b")) || visionModels[0];
             }
         }
     } catch (e) {
         console.warn("Gagal mengecek daftar model Groq secara otomatis:", e);
     }
-    return "llama-3.2-11b-vision-preview";
+    
+    // Fallback utama ke model vision instruct resmi yang didukung Groq saat ini
+    return "llama-3.2-11b-vision-instruct";
 }
 
 // ==========================================================================
