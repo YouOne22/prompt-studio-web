@@ -58,7 +58,6 @@ function compressImageBase64(base64Str, maxWidth = 1024, maxHeight = 1024, quali
     return new Promise((resolve) => {
         const img = new Image();
         
-        // KOREKSI: Pasang handler event SEBELUM menentukan img.src
         img.onload = () => {
             let width = img.width;
             let height = img.height;
@@ -83,7 +82,7 @@ function compressImageBase64(base64Str, maxWidth = 1024, maxHeight = 1024, quali
         };
         
         img.onerror = () => resolve(base64Str); // Fallback jika gagal
-        img.src = base64Str; // Set src di bagian paling akhir
+        img.src = base64Str;
     });
 }
 
@@ -248,7 +247,7 @@ function toggleCustomSizeInput() {
 }
 
 // ==========================================================================
-// HELPER: DETEKSI MODEL VISION AKTIF DARI GROQ (UPDATED)
+// HELPER: DETEKSI MODEL VISION AKTIF DARI GROQ (UPDATED & DYNAMIC)
 // ==========================================================================
 async function getActiveGroqVisionModel(apiKey) {
     try {
@@ -258,22 +257,27 @@ async function getActiveGroqVisionModel(apiKey) {
         
         if (res.ok) {
             const data = await res.json();
-            // Filter hanya model yang mendukung Vision & tidak ter-deprecate
-            const visionModels = (data.data || [])
-                .map(m => m.id)
-                .filter(id => id.toLowerCase().includes("vision") && !id.includes("preview"));
+            const allModels = data.data || [];
             
-            if (visionModels.length > 0) {
-                // Utamakan model 90b jika ada, jika tidak pakai model vision pertama yang aktif
-                return visionModels.find(m => m.includes("90b")) || visionModels[0];
+            console.log("Daftar model Groq aktif di akun Anda:", allModels.map(m => m.id));
+
+            // Cari model yang mendukung Vision (seperti Qwen 3.6, model berimbatan 'vision', atau 'vl')
+            const visionModel = allModels.find(m => {
+                const id = m.id.toLowerCase();
+                return id.includes("qwen") || id.includes("vision") || id.includes("vl");
+            });
+            
+            if (visionModel) {
+                console.log("Model Vision terpilih:", visionModel.id);
+                return visionModel.id;
             }
         }
     } catch (e) {
         console.warn("Gagal mengecek daftar model Groq secara otomatis:", e);
     }
     
-    // Fallback utama ke model vision instruct resmi yang didukung Groq saat ini
-    return "llama-3.2-11b-vision-instruct";
+    // Fallback utama jika daftar model tidak merespons: Model Vision Qwen aktif di Groq saat ini
+    return "qwen-3.6-27b";
 }
 
 // ==========================================================================
@@ -422,7 +426,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
             throw new Error("API Key Groq kosong atau belum diisi.");
         }
 
-        // KOREKSI: Default model text-only diganti ke model Groq standar yang stabil
+        // Tentukan model: Llama 3.3 untuk teks murni, atau Qwen/Vision untuk gambar
         let selectedModel = "llama-3.3-70b-versatile";
         if (currentBase64Image) {
             selectedModel = await getActiveGroqVisionModel(apiKey);
@@ -514,7 +518,6 @@ function saveCurrentBrief() {
     const outputResultElem = document.getElementById("outputResult");
     const outputResult = outputResultElem ? outputResultElem.value : "";
 
-    // KOREKSI: Gunakan flag isGenerating untuk mencegah penyimpanan saat proses belum selesai
     if (isGenerating || !outputResult.trim() || outputResult.startsWith("Sedang ")) {
         alert("Belum ada prompt hasil generate yang valid untuk disimpan!");
         return;
@@ -603,7 +606,6 @@ function renderHistory() {
         return;
     }
 
-    // KOREKSI: Gunakan escapeHtml() untuk mencegah broken layout / XSS
     historyList.innerHTML = savedBriefs.map(brief => `
         <div class="bg-[#1a1d2e] border border-gray-800 hover:border-gray-700 rounded-lg p-3 flex items-center justify-between transition gap-2">
             <div class="space-y-1 overflow-hidden">
