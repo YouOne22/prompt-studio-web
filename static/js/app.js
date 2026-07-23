@@ -269,14 +269,13 @@ function toggleCustomSizeInput() {
 }
 
 // ==========================================================================
-// HELPER: VISION API DARI GOOGLE AI STUDIO (GEMINI 2.0 FLASH)
+// HELPER: VISION API DARI GOOGLE AI STUDIO (GEMINI 3.5 FLASH)
 // ==========================================================================
-async function analyzeImageWithGemini(geminiKey, base64Image) {
-    // Bersihkan header Data URL jika ada
+async function analyzeImageWithGemini(geminiKey, base64Image, retryCount = 0) {
     const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, "");
     
-    // Menggunakan model aktif resmi: gemini-2.0-flash
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+    // Menggunakan model aktif resmi terbaru: gemini-3.5-flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`;
 
     const response = await fetch(url, {
         method: "POST",
@@ -297,6 +296,22 @@ async function analyzeImageWithGemini(geminiKey, base64Image) {
             }]
         })
     });
+
+    // JIKA TERKENA RATE LIMIT (HTTP 429)
+    if (response.status === 429) {
+        if (retryCount < 2) {
+            const outputResult = document.getElementById("outputResult");
+            if (outputResult) {
+                outputResult.value = `[Rate Limit Google AI] Batas request tercapai. Menunggu jeda cooldown (15 detik)... [Percobaan ${retryCount + 1}/2]`;
+            }
+            // Tunggu 15 detik sesuai kebijakan Google API
+            await new Promise(resolve => setTimeout(resolve, 15000));
+            // Coba lagi secara otomatis
+            return analyzeImageWithGemini(geminiKey, base64Image, retryCount + 1);
+        } else {
+            throw new Error("Batas request gratis Gemini tercapai. Silakan tunggu 1 menit sebelum mencoba lagi, atau gunakan API Key Google AI Studio lainnya.");
+        }
+    }
 
     if (!response.ok) {
         const errJson = await response.json().catch(() => ({}));
