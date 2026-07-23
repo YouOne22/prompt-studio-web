@@ -500,11 +500,12 @@ ${detailsText}${imageInstructionSection}
 =========================================
 INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 =========================================
-1. Buat prompt gambar dalam BAHASA INGGRIS yang kaya deskripsi visual (komposisi simetris, lighting studio, ornamen berkualitas tinggi, dan skema warna harmoni).
-2. Minta AI generator gambar untuk merender JUDUL UTAMA & SUB-JUDUL secara sangat jelas di dalam tanda petik ganda.
-3. TATA LETAK VERTIKAL: Informasi detail acara (seperti Tanggal, Lokasi, Kontak, dll.) HARUS disusun secara VERTIKAL BERTUMPUK (stacked top-to-bottom / baris terpisah satu per satu), BUKAN berdampingan secara horizontal.
-4. ATURAN KETAT HAPUS DATA KOSONG: Abaikan dan HAPUS SELURUHNYA elemen atau data yang kosong/tidak diisi di dalam brief. Jangan membuat teks dummy atau placeholder untuk data yang tidak ada.
-5. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.`;
+1. Deskripsi gaya visual, komposisi, lighting, dan suasana dibuat dalam BAHASA INGGRIS yang kaya deskripsi.
+2. ATURAN KETAT BAHASA TEKS POSTER: Semua teks/tulisan yang harus dirender pada gambar (Judul Utama, Sub-Judul, Label Keterangan seperti "Hari/Tanggal:", "Lokasi:", "Pengisi Acara:", "HTM:", "Kontak:", dll.) HARUS TETAP DALAM BAHASA INDONESIA SESUAI BRIEF ASLI.
+3. DILARANG KERAS menerjemahkan kata label tulisan poster ke Bahasa Inggris (DILARANG pakai "Date:", "Location:", "Performers:", dsb). Wajib cantumkan teks Indonesia di dalam tanda petik ganda ("...").
+4. TATA LETAK VERTIKAL: Informasi detail acara HARUS disusun secara VERTIKAL BERTUMPUK (stacked top-to-bottom / baris terpisah satu per satu).
+5. ATURAN HAPUS DATA KOSONG: Abaikan dan HAPUS SELURUHNYA elemen atau data yang kosong/tidak diisi di dalam brief.
+6. Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa basa-basi.`;
 
         // ------------------------------------------------------------------
         // STEP 4: KIRIMKAN PROMPT TERSTRUKTUR KE GROQ (LLAMA 3.3 70B)
