@@ -269,14 +269,14 @@ function toggleCustomSizeInput() {
 }
 
 // ==========================================================================
-// HELPER: VISION API DARI GOOGLE AI STUDIO (GEMINI 1.5 FLASH)
+// HELPER: VISION API DARI GOOGLE AI STUDIO (GEMINI 2.0 FLASH)
 // ==========================================================================
 async function analyzeImageWithGemini(geminiKey, base64Image) {
     // Bersihkan header Data URL jika ada
     const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, "");
     
-    // GANTI 'gemini-2.5-flash' MENJADI 'gemini-1.5-flash' ATAU 'gemini-2.0-flash'
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+    // Menggunakan model aktif resmi: gemini-2.0-flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
 
     const response = await fetch(url, {
         method: "POST",
