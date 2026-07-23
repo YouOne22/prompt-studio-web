@@ -39,7 +39,7 @@ def generate_prompt(req: PromptRequest):
     if client:
         try:
             response = client.models.generate_content(
-                model="openai_api_key",
+                model="qwen/qwen3.6-27b",
                 contents=user_content,
                 config={"system_instruction": system_instruction}
             )
