@@ -3,7 +3,7 @@
 // ==========================================================================
 const STORAGE_KEY = "prompt_studio_saved_briefs";
 let currentBase64Image = null; // Menyimpan data gambar terkompresi dalam format base64
-let isGenerating = false;     // Flag pelacak status proses API
+let isGenerating = false;      // Flag pelacak status proses API
 
 // Daftar Kunci Akses Cadangan
 const LOCAL_VALID_KEYS = [
@@ -14,17 +14,31 @@ const LOCAL_VALID_KEYS = [
 ];
 
 document.addEventListener("DOMContentLoaded", function () {
-    // 1. Restore API Key dari LocalStorage ke Input Header jika ada
-    const savedKey = localStorage.getItem("groq_api_key");
-    const keyInput = document.getElementById("groqApiKeyInput");
-    if (savedKey && keyInput) {
-        keyInput.value = savedKey;
+    // 1. Restore API Keys dari LocalStorage ke Input Header jika ada
+    const savedGroqKey = localStorage.getItem("groq_api_key");
+    const groqKeyInput = document.getElementById("groqApiKeyInput");
+    if (savedGroqKey && groqKeyInput) {
+        groqKeyInput.value = savedGroqKey;
     }
 
-    // 2. Event Listener untuk Otomatis Menyimpan Key saat Ditulis di Header
-    if (keyInput) {
-        keyInput.addEventListener("input", function () {
-            saveApiKey(this.value);
+    // Restore Gemini Key jika elemen inputnya tersedia di DOM
+    const savedGeminiKey = localStorage.getItem("gemini_api_key");
+    const geminiKeyInput = document.getElementById("geminiApiKeyInput");
+    if (savedGeminiKey && geminiKeyInput) {
+        geminiKeyInput.value = savedGeminiKey;
+    }
+
+    // 2. Event Listener untuk Otomatis Menyimpan Groq Key saat Ditulis
+    if (groqKeyInput) {
+        groqKeyInput.addEventListener("input", function () {
+            saveGroqApiKey(this.value);
+        });
+    }
+
+    // Event Listener untuk Gemini Key (Jika ada input khusus di HTML)
+    if (geminiKeyInput) {
+        geminiKeyInput.addEventListener("input", function () {
+            saveGeminiApiKey(this.value);
         });
     }
 
@@ -32,11 +46,19 @@ document.addEventListener("DOMContentLoaded", function () {
     onSidebarChange();
 });
 
-function saveApiKey(val) {
+function saveGroqApiKey(val) {
     if (val && val.trim()) {
         localStorage.setItem("groq_api_key", val.trim());
     } else {
         localStorage.removeItem("groq_api_key");
+    }
+}
+
+function saveGeminiApiKey(val) {
+    if (val && val.trim()) {
+        localStorage.setItem("gemini_api_key", val.trim());
+    } else {
+        localStorage.removeItem("gemini_api_key");
     }
 }
 
@@ -87,7 +109,7 @@ function compressImageBase64(base64Str, maxWidth = 1024, maxHeight = 1024, quali
 }
 
 // ==========================================================================
-// MANAJEMEN UPLOAD & PREVIEW GAMBAR REFERENSI (VISION)
+// MANAJEMEN UPLOAD & PREVIEW GAMBAR REFERENSI
 // ==========================================================================
 async function handleImageUpload(event) {
     const file = event.target.files[0];
@@ -247,41 +269,53 @@ function toggleCustomSizeInput() {
 }
 
 // ==========================================================================
-// HELPER: DETEKSI MODEL VISION AKTIF DARI GROQ (UPDATED & DYNAMIC)
+// HELPER: VISION API DARI GOOGLE AI STUDIO (GEMINI 2.5 FLASH)
 // ==========================================================================
-async function getActiveGroqVisionModel(apiKey) {
-    try {
-        const res = await fetch("https://api.groq.com/openai/v1/models", {
-            headers: { "Authorization": `Bearer ${apiKey}` }
-        });
-        
-        if (res.ok) {
-            const data = await res.json();
-            const allModels = data.data || [];
-            
-            console.log("Daftar model Groq aktif di akun Anda:", allModels.map(m => m.id));
-
-            // Cari model yang mendukung Vision (seperti Qwen 3.6, model berimbatan 'vision', atau 'vl')
-            const visionModel = allModels.find(m => {
-                const id = m.id.toLowerCase();
-                return id.includes("qwen") || id.includes("vision") || id.includes("vl");
-            });
-            
-            if (visionModel) {
-                console.log("Model Vision terpilih:", visionModel.id);
-                return visionModel.id;
-            }
-        }
-    } catch (e) {
-        console.warn("Gagal mengecek daftar model Groq secara otomatis:", e);
-    }
+async function analyzeImageWithGemini(geminiKey, base64Image) {
+    // Bersihkan header Data URL jika ada
+    const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, "");
     
-    // Fallback utama jika daftar model tidak merespons: Model Vision Qwen aktif di Groq saat ini
-    return "qwen-3.6-27b";
+    // Endpoint REST API resmi Google AI Studio
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: [{
+                parts: [
+                    { 
+                        text: "Analyze this reference image in extreme detail for a graphic design brief. Describe its overall artistic style, color palette, lighting atmosphere, layout composition, typography style, dynamic background, and key visual elements in precise English." 
+                    },
+                    {
+                        inline_data: {
+                            mime_type: "image/jpeg",
+                            data: cleanBase64
+                        }
+                    }
+                ]
+            }]
+        })
+    });
+
+    if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        const errMsg = errJson.error?.message || `HTTP ${response.status}`;
+        throw new Error(`[Gemini Vision Error]: ${errMsg}`);
+    }
+
+    const data = await response.json();
+    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!resultText) {
+        throw new Error("Gemini tidak dapat menganalisis gambar ini.");
+    }
+
+    return resultText;
 }
 
 // ==========================================================================
-// GENERATOR ENGINE (DENGAN VERIFIKASI KODE AKSES)
+// GENERATOR ENGINE (MULTI-MODEL PIPELINE: GEMINI VISION -> GROQ TEXT)
 // ==========================================================================
 async function generatePrompt() {
     // ----------------------------------------------------------------------
@@ -331,7 +365,7 @@ async function generatePrompt() {
     localStorage.setItem("user_access_key", accessKey);
 
     // ----------------------------------------------------------------------
-    // STEP 2: PROSES GENERATE PROMPT
+    // STEP 2: PERSIAPAN DATA FORMULIR
     // ----------------------------------------------------------------------
     const generateBtn = document.getElementById("generateBtn");
     const outputResult = document.getElementById("outputResult");
@@ -366,11 +400,71 @@ async function generatePrompt() {
         ? detailsArr.join("\n") 
         : "- (Tidak ada detail konten tambahan yang diisi).";
 
-    const imageInstruction = currentBase64Image 
-        ? "\n6. GAMBAR REFERENSI DISERTAKAN: Analisis elemen visual, warna, objek, dan gaya dari gambar referensi terlampir. Integrasikan karakteristik visual tersebut ke dalam Master Prompt secara harmonis."
-        : "";
+    // Set Status Loading
+    isGenerating = true;
+    if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Memproses Prompt...`;
+    }
 
-    const metaPromptText = `Anda adalah seorang Senior Art Director & Expert AI Prompt Engineer.
+    try {
+        // ------------------------------------------------------------------
+        // STEP 3: MINTA API KEYS (GROQ & GEMINI JIKA ADA GAMBAR)
+        // ------------------------------------------------------------------
+        let groqApiKey = document.getElementById("groqApiKeyInput")?.value.trim() || localStorage.getItem("groq_api_key") || "";
+
+        if (!groqApiKey) {
+            groqApiKey = prompt("Masukkan Groq API Key Anda (gsk_...):");
+            if (groqApiKey) {
+                groqApiKey = groqApiKey.trim();
+                saveGroqApiKey(groqApiKey);
+                if (document.getElementById("groqApiKeyInput")) {
+                    document.getElementById("groqApiKeyInput").value = groqApiKey;
+                }
+            }
+        }
+
+        if (!groqApiKey) {
+            throw new Error("API Key Groq kosong atau belum diisi.");
+        }
+
+        let visualAnalysisResult = "";
+
+        // TAHAP A: JIKA GAMBAR DIUNGGAH -> JALANKAN GOOGLE GEMINI VISION
+        if (currentBase64Image) {
+            outputResult.value = "Tahap 1/2: Menganalisis elemen & gaya visual gambar menggunakan Google Gemini AI...";
+
+            let geminiApiKey = document.getElementById("geminiApiKeyInput")?.value.trim() || localStorage.getItem("gemini_api_key") || "";
+
+            if (!geminiApiKey) {
+                geminiApiKey = prompt("Masukkan Google Gemini API Key Anda (dari Google AI Studio):");
+                if (geminiApiKey) {
+                    geminiApiKey = geminiApiKey.trim();
+                    saveGeminiApiKey(geminiApiKey);
+                    if (document.getElementById("geminiApiKeyInput")) {
+                        document.getElementById("geminiApiKeyInput").value = geminiApiKey;
+                    }
+                }
+            }
+
+            if (!geminiApiKey) {
+                throw new Error("Google Gemini API Key diperlukan untuk menganalisis gambar referensi.");
+            }
+
+            // Panggil Fungsi Gemini Vision
+            visualAnalysisResult = await analyzeImageWithGemini(geminiApiKey, currentBase64Image);
+        }
+
+        // TAHAP B: SUSUN METAPROMPT DAN PROSES KE GROQ API
+        outputResult.value = currentBase64Image 
+            ? "Tahap 2/2: Menggabungkan hasil analisis visual & meracik Master Prompt dengan Groq..." 
+            : "Menghubungkan ke Groq API untuk meracik Master Prompt...";
+
+        const imageInstructionSection = visualAnalysisResult 
+            ? `\n\nANALISIS VISUAL DARI GAMBAR REFERENSI (Oleh Gemini Vision):\n${visualAnalysisResult}\n\nInstruksi Integrasi Gambar: Ambil skema warna, nuansa pencahayaan, estetika latar belakang, dan harmoni komposisi dari analisis visual gambar di atas, lalu padukan secara sempurna ke dalam Master Prompt.`
+            : "";
+
+        const metaPromptText = `Anda adalah seorang Senior Art Director & Expert AI Prompt Engineer.
 
 Tugas Anda adalah menerjemahkan brief desain cetak/grafis di bawah ini menjadi 1 MASTER PROMPT GAMBAR (dalam Bahasa Inggris) yang sangat detail, profesional, dan siap digunakan pada generator AI [${targetAi}].
 
@@ -386,7 +480,7 @@ BRIEF DESAIN LENGKAP:
 • Target Engine AI   : ${targetAi}
 
 DETAIL KONTEN & ELEMEN DESAIN:
-${detailsText}
+${detailsText}${imageInstructionSection}
 
 =========================================
 INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
@@ -395,61 +489,19 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 2. Minta AI generator gambar untuk merender JUDUL UTAMA & SUB-JUDUL secara sangat jelas di dalam tanda petik ganda.
 3. TATA LETAK VERTIKAL: Informasi detail acara (seperti Tanggal, Lokasi, Kontak, dll.) HARUS disusun secara VERTIKAL BERTUMPUK (stacked top-to-bottom / baris terpisah satu per satu), BUKAN berdampingan secara horizontal.
 4. ATURAN KETAT HAPUS DATA KOSONG: Abaikan dan HAPUS SELURUHNYA elemen atau data yang kosong/tidak diisi di dalam brief. Jangan membuat teks dummy atau placeholder untuk data yang tidak ada.
-5. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.${imageInstruction}`;
+5. Berikan HANYA teks prompt gambar akhir dalam Bahasa Inggris di dalam KODE BLOK (markdown code block) tanpa basa-basi pembuka atau penutup.`;
 
-    // Update Flag State Loading
-    isGenerating = true;
-    if (generateBtn) {
-        generateBtn.disabled = true;
-        generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghubungkan Groq API...`;
-    }
-    
-    outputResult.value = currentBase64Image 
-        ? "Sedang Mendeteksi Vision & Menganalisis Gambar..." 
-        : "Sedang menghubungi AI Prompter Builder...";
-
-    try {
-        let apiKey = document.getElementById("groqApiKeyInput")?.value.trim() || localStorage.getItem("groq_api_key") || "";
-
-        if (!apiKey) {
-            apiKey = prompt("Masukkan Groq API Key Anda (gsk_...):");
-            if (apiKey) {
-                apiKey = apiKey.trim();
-                saveApiKey(apiKey);
-                if (document.getElementById("groqApiKeyInput")) {
-                    document.getElementById("groqApiKeyInput").value = apiKey;
-                }
-            }
-        }
-
-        if (!apiKey) {
-            throw new Error("API Key Groq kosong atau belum diisi.");
-        }
-
-        // Tentukan model: Llama 3.3 untuk teks murni, atau Qwen/Vision untuk gambar
-        let selectedModel = "llama-3.3-70b-versatile";
-        if (currentBase64Image) {
-            selectedModel = await getActiveGroqVisionModel(apiKey);
-        }
-
-        let userMessageContent;
-        if (currentBase64Image) {
-            userMessageContent = [
-                { type: "text", text: metaPromptText },
-                { type: "image_url", image_url: { url: currentBase64Image } }
-            ];
-        } else {
-            userMessageContent = metaPromptText;
-        }
-
+        // ------------------------------------------------------------------
+        // STEP 4: KIRIMKAN PROMPT TERSTRUKTUR KE GROQ (LLAMA 3.3 70B)
+        // ------------------------------------------------------------------
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${apiKey}`,
+                "Authorization": `Bearer ${groqApiKey}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: selectedModel,
+                model: "llama-3.3-70b-versatile",
                 messages: [
                     {
                         role: "system",
@@ -457,7 +509,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
                     },
                     {
                         role: "user",
-                        content: userMessageContent
+                        content: metaPromptText
                     }
                 ],
                 temperature: 0.7,
@@ -484,8 +536,8 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
         }
 
     } catch (error) {
-        console.error("Gagal melakukan permintaan ke Groq API:", error);
-        outputResult.value = `/* [ERROR GROQ API: ${error.message}] */\n\n/* METAPROMPT LOKAL (Dapat langsung di-copy ke ChatGPT / Claude): */\n\n` + metaPromptText;
+        console.error("Gagal melakukan permintaan API Pipeline:", error);
+        outputResult.value = `/* [ERROR PIPELINE: ${error.message}] */\n\n/* METAPROMPT LOKAL (Dapat langsung di-copy ke ChatGPT / Claude): */\n\n` + (typeof metaPromptText !== 'undefined' ? metaPromptText : "");
     } finally {
         isGenerating = false;
         if (generateBtn) {
@@ -518,7 +570,7 @@ function saveCurrentBrief() {
     const outputResultElem = document.getElementById("outputResult");
     const outputResult = outputResultElem ? outputResultElem.value : "";
 
-    if (isGenerating || !outputResult.trim() || outputResult.startsWith("Sedang ")) {
+    if (isGenerating || !outputResult.trim() || outputResult.startsWith("Sedang ") || outputResult.startsWith("Tahap ")) {
         alert("Belum ada prompt hasil generate yang valid untuk disimpan!");
         return;
     }
