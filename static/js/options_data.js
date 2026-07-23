@@ -9,12 +9,12 @@ const OPTIONS_DATA = {
             "Selamat Datang / Ucapan / Banner",
             "Properti / Jual Beli / Sewa",
             // --- SUB-KATEGORI BACKGROUND PANGGUNG ---
-            "Background Panggung Kesenian & Budaya",
-            "Background Panggung Kemerdekaan (17 Agustus)",
-            "Background Panggung Musik / Konser / Festival",
-            "Background Panggung Wisuda / Purnawiyata",
-            "Background Panggung Keagamaan / Tabligh Akbar",
-            "Background Panggung Hajatan / Acara Desa / Gala Dinner"
+            " Kesenian & Budaya",
+            "Kemerdekaan (17 Agustus)",
+            "Musik / Konser / Festival",
+            "Wisuda / Purnawiyata",
+            "Keagamaan / Tabligh Akbar",
+            "Hajatan / Acara Desa / Gala Dinner"
         ],
         sizes: [
             "3 x 1 Meter",
@@ -36,12 +36,12 @@ const OPTIONS_DATA = {
     },
     "Backdrop / Banner Panggung": {
         subStyles: [
-            "Background Panggung Kesenian & Budaya",
-            "Background Panggung Kemerdekaan (17 Agustus)",
-            "Background Panggung Musik / Konser / Festival",
-            "Background Panggung Wisuda / Purnawiyata",
-            "Background Panggung Keagamaan / Tabligh Akbar",
-            "Background Panggung Hajatan / Acara Desa / Gala Dinner"
+            "Kesenian & Budaya",
+            "Kemerdekaan (17 Agustus)",
+            "Musik / Konser / Festival",
+            "Wisuda / Purnawiyata",
+            "Keagamaan / Tabligh Akbar",
+            "Hajatan / Acara Desa / Gala Dinner"
         ],
         sizes: [
             "3 x 2 Meter",
