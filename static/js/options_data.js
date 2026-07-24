@@ -110,7 +110,7 @@ const OPTIONS_DATA = {
             { id: "warna", label: "Palette Warna & Nuansa Desain", type: "text", placeholder: "Contoh: Hitam Matte dengan Emas / Navy & White" }
         ]
     },
-    "Kartu Nama": {
+    "Logo": {
         subStyles: [
             "Bengkel",
             "Masakan",
@@ -122,8 +122,6 @@ const OPTIONS_DATA = {
             "Elegant & Luxury"
         ],
         sizes: [
-            "Standar Indonesia (9 x 5.5 cm)",
-            "Standar US (8.9 x 5.1 cm)",
             "Persegi (6.5 x 6.5 cm)",
             "Kustom"
         ],
