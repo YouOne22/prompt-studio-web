@@ -8,7 +8,7 @@ let isGenerating = false;      // Flag pelacak status proses API
 // Daftar Kunci Akses Cadangan
 const LOCAL_VALID_KEYS = [
     "KEY-ADMIN-123",
-    "KEY-VIP-12345",
+    "DEMO",
     "PROMPT-STUDIO-2026",
     "MEMBER-SECRET-99"
 ];
