@@ -8,8 +8,7 @@ const OPTIONS_DATA = {
             "Kuliner / Makanan & Minuman",
             "Selamat Datang / Ucapan / Banner",
             "Properti / Jual Beli / Sewa",
-            // --- SUB-KATEGORI BACKGROUND PANGGUNG ---
-            " Kesenian & Budaya",
+            "Kesenian & Budaya",
             "Kemerdekaan (17 Agustus)",
             "Musik / Konser / Festival",
             "Wisuda / Purnawiyata",
@@ -93,6 +92,33 @@ const OPTIONS_DATA = {
             "Corporate & Professional",
             "Creative & Portfolio",
             "Minimalist Modern",
+            "Elegant & Luxury"
+        ],
+        sizes: [
+            "Standar Indonesia (9 x 5.5 cm)",
+            "Standar US (8.9 x 5.1 cm)",
+            "Persegi (6.5 x 6.5 cm)",
+            "Kustom"
+        ],
+        fields: [
+            { id: "namaLengkap", label: "Nama Lengkap & Gelar", type: "text", placeholder: "Contoh: H. Ahmad Pratama, S.T." },
+            { id: "jabatan", label: "Jabatan / Profesi / Spesialisasi", type: "text", placeholder: "Contoh: Chief Executive Officer / Graphic Designer" },
+            { id: "namaPerusahaan", label: "Nama Perusahaan / Brand / Lembaga", type: "text", placeholder: "Contoh: PRST Digital Solution" },
+            { id: "kontakLengkap", label: "Detail Kontak (Telepon, WA & Email)", type: "textarea", placeholder: "Telp/WA: +62 812-3456-7890\nEmail: ahmad@prst.id" },
+            { id: "sosmed", label: "Website, Media Sosial & Alamat", type: "text", placeholder: "Web: www.prst.id | IG: @prst.id | Jakarta, Indonesia" },
+            { id: "logoElemen", label: "Logo & Slogan Singkat", type: "text", placeholder: "Contoh: Logo di pojok kiri atas | Slogan: 'Your Digital Partner'" },
+            { id: "warna", label: "Palette Warna & Nuansa Desain", type: "text", placeholder: "Contoh: Hitam Matte dengan Emas / Navy & White" }
+        ]
+    },
+    "Kartu Nama": {
+        subStyles: [
+            "Bengkel",
+            "Masakan",
+            "Minimarket",
+            "Creative",
+            "Networking",
+            "General",
+            "Corporate",
             "Elegant & Luxury"
         ],
         sizes: [
