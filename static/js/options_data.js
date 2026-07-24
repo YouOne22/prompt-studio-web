@@ -122,6 +122,8 @@ const OPTIONS_DATA = {
             "Elegant & Luxury"
         ],
         sizes: [
+            "Standar Indonesia (9 x 5.5 cm)",
+            "Standar US (8.9 x 5.1 cm)",
             "Persegi (6.5 x 6.5 cm)",
             "Kustom"
         ],
