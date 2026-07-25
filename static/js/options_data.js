@@ -25,7 +25,7 @@ const OPTIONS_DATA = {
         ],
         fields: [
             { id: "namaUsaha", label: "Judul Utama / Nama Acara / Nama Usaha", type: "text", placeholder: "Contoh: Peringatan Isra Mi'raj / PENTAS SENI BUDAYA / Toko Maju Jaya" },
-            { id: "tagline", label: "Sub-Judul / Tema / Slogan Promosi", type: "text", placeholder: "Contoh: Meneladani Akhlak Nabi / Semarak Malam Puncak Kemerdekaan / Diskon 50%" },
+            { id: "tagline", label: "Sub-Judul / Tema / Slogan Promosi", type: "textarea", placeholder: "Contoh:\n- Meneladani Akhlak Nabi\n- Diskon Hingga 50%\n- Wujudkan Desa Digital" },
             { id: "layanan", label: "Detail Acara / Penceramah / Poin Informasi / Produk", type: "textarea", placeholder: "Contoh:\n- Penceramah: KH. Ahmad\n- Pengisi Acara: Tari Tradisional, Campursari\n- Menjual: Sembako, Pulsa, Alat Tulis" },
             { id: "kontak", label: "Waktu, Tanggal, Lokasi & Kontak (WA/HP)", type: "text", placeholder: "Contoh: Sabtu, 15 April 2026 | Masjid Agung | WA: 0812-3456-7890" },
             { id: "penyelenggara", label: "Penyelenggara / Logo / Sponsor (Opsional)", type: "text", placeholder: "Contoh: DKM Masjid Agung, Karang Taruna, Didukung oleh Bank X" },
@@ -53,7 +53,7 @@ const OPTIONS_DATA = {
         ],
         fields: [
             { id: "namaUsaha", label: "Judul Utama Panggung / Nama Acara", type: "text", placeholder: "Contoh: MALAM PUNCAK PERINGATAN HUT RI KE-81 / WISUDA PURNAWIYATA" },
-            { id: "tagline", label: "Sub-Judul / Tema Utama Panggung", type: "text", placeholder: "Contoh: Nusantara Baru Indonesia Maju / Melangkah Mantap Menuju Masa Depan" },
+            { id: "tagline", label: "Sub-Judul / Tema Utama Panggung", type: "textarea", placeholder: "Contoh:\n- Nusantara Baru Indonesia Maju\n- Melangkah Mantap Menuju Masa Depan" },
             { id: "layanan", label: "Pengisi Acara / Bintang Tamu / Agenda Utama", type: "textarea", placeholder: "Contoh:\n- Pertunjukan Tari Kolosal\n- Musik Organ Tunggal\n- Penyerahan Hadiah Lomba" },
             { id: "kontak", label: "Waktu, Tanggal & Lokasi Acara", type: "text", placeholder: "Contoh: Minggu, 17 Agustus 2026 | Panggung Utama Lapangan Merdeka" },
             { id: "penyelenggara", label: "Penyelenggara / Logo / Sponsor", type: "text", placeholder: "Contoh: Pemerintah Desa, Karang Taruna Tunas Muda" },
@@ -78,7 +78,7 @@ const OPTIONS_DATA = {
         ],
         fields: [
             { id: "judulPoster", label: "Judul Utama Poster", type: "text", placeholder: "Contoh: Festival Seni & Tabligh Akbar 2026" },
-            { id: "subJudul", label: "Sub-Judul / Tema Utama", type: "text", placeholder: "Contoh: Menjaga Tradisi di Era Digital" },
+            { id: "subJudul", label: "Sub-Judul / Tema Utama", type: "textarea", placeholder: "Contoh:\n- Menjaga Tradisi di Era Digital\n- Mewujudkan Generasi Muda Unggul" }
             { id: "poinPenting", label: "Isi Ringkas / Highlights / Pemateri", type: "textarea", placeholder: "Contoh:\n1. Syarat Pendaftaran\n2. Bintang Tamu / Keynote Speaker\n3. Fasilitas Peserta" },
             { id: "tanggalLokasi", label: "Waktu, Tanggal & Lokasi", type: "text", placeholder: "Contoh: Sabtu, 15 Agustus 2026 @ Hall A Jakarta" },
             { id: "callToAction", label: "Call To Action / Registrasi & HTM", type: "text", placeholder: "Contoh: HTM Gratis | Daftar di www.website.com | Hub: 0812-xxx" },
@@ -104,7 +104,7 @@ const OPTIONS_DATA = {
             { id: "namaLengkap", label: "Nama Lengkap & Gelar", type: "text", placeholder: "Contoh: H. Ahmad Pratama, S.T." },
             { id: "jabatan", label: "Jabatan / Profesi / Spesialisasi", type: "text", placeholder: "Contoh: Chief Executive Officer / Graphic Designer" },
             { id: "namaPerusahaan", label: "Nama Perusahaan / Brand / Lembaga", type: "text", placeholder: "Contoh: PRST Digital Solution" },
-            { id: "kontakLengkap", label: "Detail Kontak (Telepon, WA & Email)", type: "textarea", placeholder: "Telp/WA: +62 812-3456-7890\nEmail: ahmad@prst.id" },
+            { id: "kontak", label: "Waktu, Tanggal & Lokasi Acara", type: "text", placeholder: "Contoh: Minggu, 17 Agustus 2026 | Panggung Utama Lapangan Merdeka"
             { id: "sosmed", label: "Website, Media Sosial & Alamat", type: "text", placeholder: "Web: www.prst.id | IG: @prst.id | Jakarta, Indonesia" },
             { id: "logoElemen", label: "Logo & Slogan Singkat", type: "text", placeholder: "Contoh: Logo di pojok kiri atas | Slogan: 'Your Digital Partner'" },
             { id: "warna", label: "Palette Warna & Nuansa Desain", type: "text", placeholder: "Contoh: Hitam Matte dengan Emas / Navy & White" }
