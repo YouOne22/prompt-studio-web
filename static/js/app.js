@@ -214,7 +214,7 @@ function onSubStyleChange() {
 
     const defaultFields = [
         { id: "main_title", label: `Judul Utama ${designType}`, placeholder: "Contoh: OJO DUMEH FEST", type: "input" },
-        { id: "subtitle", label: "Sub-Judul / Tema", placeholder: "Contoh: PENTAS SENI PERTUNJUKAN RAKYAT", type: "input" },
+        { id: "subtitle", label: "Sub-Judul / Tema", placeholder: "Contoh: PENTAS SENI PERTUNJUKAN RAKYAT", type: "textarea" },
         { id: "highlights", label: "Isi Ringkas / Highlights", placeholder: "Contoh: Daftar Bintang Tamu / Menu Utama", type: "textarea" },
         { id: "datetime", label: "Waktu, Tanggal & Lokasi", placeholder: "Contoh: Minggu, 2 Agustus 2026 | Lapangan Desa Kemitir", type: "input" },
         { id: "cta", label: "Call to Action / Registrasi", placeholder: "Contoh: HTM Gratis | Hub: 0812-xxxx", type: "input" },
