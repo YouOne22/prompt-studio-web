@@ -479,9 +479,9 @@ async function generatePrompt() {
             ? `\n\nANALISIS VISUAL DARI GAMBAR REFERENSI (Oleh Gemini Vision):\n${visualAnalysisResult}\n\nInstruksi Integrasi Gambar: Ambil skema warna, nuansa pencahayaan, estetika latar belakang, dan harmoni komposisi dari analisis visual gambar di atas, lalu padukan secara sempurna ke dalam Master Prompt.`
             : "";
 
-        const metaPromptText = `Anda adalah seorang Senior Art Director & Expert AI Prompt Engineer.
+        const metaPromptText = `Anda adalah seorang Senior Graphic Designer, Art Director, dan Expert AI Prompt Engineer.
 
-Tugas Anda adalah menerjemahkan brief desain cetak/grafis di bawah ini menjadi 1 MASTER PROMPT GAMBAR (dalam Bahasa Inggris) yang sangat detail, profesional, dan siap digunakan pada generator AI [${targetAi}].
+Tugas Anda adalah menerjemahkan brief desain di bawah ini menjadi 1 MASTER PROMPT GAMBAR (dalam Bahasa Inggris) yang sangat detail, profesional, dan siap digunakan pada generator AI [${targetAi}].
 
 =========================================
 BRIEF DESAIN LENGKAP:
@@ -500,12 +500,29 @@ ${detailsText}${imageInstructionSection}
 =========================================
 INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 =========================================
-1. Deskripsi gaya visual, komposisi, lighting, dan suasana dibuat dalam BAHASA INGGRIS yang kaya deskripsi.
-2. ATURAN KETAT BAHASA TEKS POSTER: Semua teks/tulisan yang harus dirender pada gambar (Judul Utama, Sub-Judul, Label Keterangan seperti "Hari/Tanggal:", "Lokasi:", "Pengisi Acara:", "HTM:", "Kontak:", dll.) HARUS TETAP DALAM BAHASA INDONESIA SESUAI BRIEF ASLI.
-3. DILARANG KERAS menerjemahkan kata label tulisan poster ke Bahasa Inggris (DILARANG pakai "Date:", "Location:", "Performers:", dsb). Wajib cantumkan teks Indonesia di dalam tanda petik ganda ("...").
-4. TATA LETAK VERTIKAL: Informasi detail acara HARUS disusun secara VERTIKAL BERTUMPUK (stacked top-to-bottom / baris terpisah satu per satu).
-5. ATURAN HAPUS DATA KOSONG: Abaikan dan HAPUS SELURUHNYA elemen atau data yang kosong/tidak diisi di dalam brief.
-6. Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa basa-basi.`;
+1. BAHASA DESKRIPSI: Tulis seluruh deskripsi visual, komposisi, pencahayaan, dan latar belakang dalam BAHASA INGGRIS yang kaya detail.
+
+2. ATURAN KETAT TEKS POSTER (BAHASA INDONESIA):
+   - Semua teks yang dirender (Judul Utama, Sub-Judul, Label seperti "Hari/Tanggal:", "Lokasi:", "HTM:", "Kontak:", dll.) HARUS TETAP DALAM BAHASA INDONESIA.
+   - DILARANG Menerjemahkan kata label ke Bahasa Inggris (DILARANG pakai "Date:", "Location:", "Performers:", dll).
+   - Selalu apit teks Indonesia dalam tanda petik ganda, contoh: "OJO DUMEH FEST", "Hari/Tanggal: Minggu, 2 Agustus 2026".
+
+3. ATURAN ANTI-AI LOOK & ESTETIKA MANUSIA:
+   - Hindari efek AI generik: cegah kulit tampak plastis/licin berlebihan, hindari pencahayaan 'over-saturated glossy glow' buatan.
+   - Gunakan estetika desain grafis profesional buatan manusia: pencahayaan realistis, tekstur cetak alami, grain mikro yang halus, harmoni warna editorial, dan tata letak dengan 'white space' yang seimbang.
+   - Pastikan komposisi tipografi tidak saling tumpang tindih (*clean visual hierarchy*).
+
+4. ATURAN TATA LETAK VERTIKAL:
+   - Informasi detail acara HARUS disusun secara VERTIKAL BERTUMPUK (stacked top-to-bottom / baris terpisah satu per satu).
+
+5. OPTIMASI SINTAKS ENGINE TARGET [${targetAi}]:
+   - Jika target Midjourney: Sertakan parameter aspect ratio yang sesuai di ujung prompt (misal: --ar 3:4 atau --ar 9:16) dan gunakan '--style raw' untuk menekan efek AI.
+   - Jika target FLUX / DALL-E: Gunakan deskripsi natural language yang sangat jelas dan terstruktur tanpa tag spaming.
+
+6. ABNORMALIAS & DATA KOSONG:
+   - Abaikan dan HAPUS SELURUHNYA elemen atau data yang tidak diisi di dalam brief.
+
+7. FORMAT OUTPUT: Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa pengantar atau penjelasan tambahan.`;
 
         // ------------------------------------------------------------------
         // STEP 4: KIRIMKAN PROMPT TERSTRUKTUR KE GROQ (LLAMA 3.3 70B)
