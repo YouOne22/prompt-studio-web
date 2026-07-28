@@ -309,7 +309,7 @@ async function analyzeImageWithGemini(geminiKey, base64Image, retryCount = 0) {
             // Coba lagi secara otomatis
             return analyzeImageWithGemini(geminiKey, base64Image, retryCount + 1);
         } else {
-            throw new Error("Batas request gratis Gemini tercapai. Silakan tunggu 1 menit sebelum mencoba lagi, atau gunakan API Key Google AI Studio lainnya.");
+            throw new Error("Batas request tercapai. Silakan tunggu 1 menit sebelum mencoba lagi, atau gunakan API Key Google AI Studio lainnya.");
         }
     }
 
@@ -323,7 +323,7 @@ async function analyzeImageWithGemini(geminiKey, base64Image, retryCount = 0) {
     const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!resultText) {
-        throw new Error("Gemini tidak dapat menganalisis gambar ini.");
+        throw new Error("Kami tidak dapat menganalisis gambar ini.");
     }
 
     return resultText;
@@ -447,12 +447,12 @@ async function generatePrompt() {
 
         // TAHAP A: JIKA GAMBAR DIUNGGAH -> JALANKAN GOOGLE GEMINI VISION
         if (currentBase64Image) {
-            outputResult.value = "Tahap 1/2: Menganalisis elemen & gaya visual gambar menggunakan Google Gemini AI...";
+            outputResult.value = "Tahap 1/2: Menganalisis elemen & gaya visual gambar...";
 
             let geminiApiKey = document.getElementById("geminiApiKeyInput")?.value.trim() || localStorage.getItem("gemini_api_key") || "";
 
             if (!geminiApiKey) {
-                geminiApiKey = prompt("Masukkan Google Gemini API Key Anda (dari Google AI Studio):");
+                geminiApiKey = prompt("Masukkan API Key Anda (dari AI Studio):");
                 if (geminiApiKey) {
                     geminiApiKey = geminiApiKey.trim();
                     saveGeminiApiKey(geminiApiKey);
@@ -463,7 +463,7 @@ async function generatePrompt() {
             }
 
             if (!geminiApiKey) {
-                throw new Error("Google Gemini API Key diperlukan untuk menganalisis gambar referensi.");
+                throw new Error("API Key diperlukan untuk menganalisis gambar referensi.");
             }
 
             // Panggil Fungsi Gemini Vision
@@ -476,7 +476,7 @@ async function generatePrompt() {
             : "Menghubungkan ke Groq API untuk meracik Master Prompt...";
 
         const imageInstructionSection = visualAnalysisResult 
-            ? `\n\nANALISIS VISUAL DARI GAMBAR REFERENSI (Oleh Gemini Vision):\n${visualAnalysisResult}\n\nInstruksi Integrasi Gambar: Ambil skema warna, nuansa pencahayaan, estetika latar belakang, dan harmoni komposisi dari analisis visual gambar di atas, lalu padukan secara sempurna ke dalam Master Prompt.`
+            ? `\n\nANALISIS VISUAL DARI GAMBAR REFERENSI:\n${visualAnalysisResult}\n\nInstruksi Integrasi Gambar: Ambil skema warna, nuansa pencahayaan, estetika latar belakang, dan harmoni komposisi dari analisis visual gambar di atas, lalu padukan secara sempurna ke dalam Master Prompt.`
             : "";
 
         const metaPromptText = `Anda adalah seorang Senior Graphic Designer, Art Director, dan Expert AI Prompt Engineer.
