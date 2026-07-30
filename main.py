@@ -40,7 +40,7 @@ def generate_prompt(req: PromptRequest):
         try:
             # Menggunakan model Gemini resmi yang valid
             response = client.models.generate_content(
-                model="gemini-3.5-flash",
+                model="qwen/qwen3.6-27b",
                 contents=user_content,
                 config={"system_instruction": system_instruction}
             )
