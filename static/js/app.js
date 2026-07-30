@@ -13,6 +13,28 @@ const LOCAL_VALID_KEYS = [
     "MEMBER-SECRET-99"
 ];
 
+// Helper Pencarian Konfigurasi Kebal Karakter & Kapitalisasi
+function getCategoryConfig(designType) {
+    if (typeof OPTIONS_DATA === "undefined" || !OPTIONS_DATA) return null;
+    if (!designType) return OPTIONS_DATA["Lainnya"] || null;
+
+    // 1. Pencarian Langsung (Exact Match)
+    if (OPTIONS_DATA[designType]) return OPTIONS_DATA[designType];
+
+    // 2. Normalisasi String (Abaikan Kapitalisasi, Spasi, Underscore, Strip)
+    const cleanInput = String(designType).toLowerCase().replace(/[^a-z0-9]/g, "");
+    
+    for (const key of Object.keys(OPTIONS_DATA)) {
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (cleanKey === cleanInput) {
+            return OPTIONS_DATA[key];
+        }
+    }
+
+    // 3. Fallback
+    return OPTIONS_DATA["Lainnya"] || Object.values(OPTIONS_DATA)[0] || null;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     // 1. Restore API Keys dari LocalStorage ke Input Header jika ada
     const savedGroqKey = localStorage.getItem("groq_api_key");
@@ -28,21 +50,36 @@ document.addEventListener("DOMContentLoaded", function () {
         geminiKeyInput.value = savedGeminiKey;
     }
 
-    // 2. Event Listener untuk Otomatis Menyimpan Groq Key saat Ditulis
+    // 2. Event Listener untuk Otomatis Menyimpan API Key saat Ditulis
     if (groqKeyInput) {
         groqKeyInput.addEventListener("input", function () {
             saveGroqApiKey(this.value);
         });
     }
 
-    // Event Listener untuk Gemini Key (Jika ada input khusus di HTML)
     if (geminiKeyInput) {
         geminiKeyInput.addEventListener("input", function () {
             saveGeminiApiKey(this.value);
         });
     }
 
-    // 3. Inisialisasi Tampilan Sidebar & Form Pertama Kali
+    // 3. Event Listener Otomatis untuk Dropdown Sidebar
+    const designTypeSelect = document.getElementById("designTypeSelect");
+    if (designTypeSelect) {
+        designTypeSelect.addEventListener("change", onSidebarChange);
+    }
+
+    const subStyleSelect = document.getElementById("subStyleSelect");
+    if (subStyleSelect) {
+        subStyleSelect.addEventListener("change", onSubStyleChange);
+    }
+
+    const sizeSelect = document.getElementById("sizeSelect");
+    if (sizeSelect) {
+        sizeSelect.addEventListener("change", toggleCustomSizeInput);
+    }
+
+    // 4. Inisialisasi Tampilan Sidebar & Form Pertama Kali
     onSidebarChange();
 });
 
@@ -174,11 +211,8 @@ function onSidebarChange() {
     const subStyleSelect = document.getElementById("subStyleSelect");
     const sizeSelect = document.getElementById("sizeSelect");
 
-    const options = (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA[designType]) 
-        ? OPTIONS_DATA[designType] 
-        : (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA["Lainnya"]) 
-            ? OPTIONS_DATA["Lainnya"] 
-            : { subStyles: ["Umum / Standard"], sizes: ["A3", "Kustom"] };
+    const categoryConfig = getCategoryConfig(designType);
+    const options = categoryConfig || { subStyles: ["Umum / Standard"], sizes: ["A3", "Kustom"] };
 
     if (subStyleSelect) {
         subStyleSelect.innerHTML = "";
@@ -221,9 +255,8 @@ function onSubStyleChange() {
         { id: "organizer", label: "Penyelenggara & Sponsor", placeholder: "Contoh: Pemdes Kemitir", type: "input" }
     ];
 
-    const fields = (typeof OPTIONS_DATA !== "undefined" && OPTIONS_DATA[designType]?.fields) 
-        ? OPTIONS_DATA[designType].fields 
-        : defaultFields;
+    const categoryConfig = getCategoryConfig(designType);
+    const fields = (categoryConfig && categoryConfig.fields) ? categoryConfig.fields : defaultFields;
 
     container.innerHTML = "";
 
@@ -269,13 +302,13 @@ function toggleCustomSizeInput() {
 }
 
 // ==========================================================================
-// HELPER: VISION API DARI GOOGLE AI STUDIO (GEMINI 3.5 FLASH)
+// HELPER: VISION API DARI GOOGLE AI STUDIO (GEMINI 2.5 FLASH)
 // ==========================================================================
 async function analyzeImageWithGemini(geminiKey, base64Image, retryCount = 0) {
     const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, "");
     
-    // Menggunakan model aktif resmi terbaru: gemini-3.5-flash
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`;
+    // Menggunakan model aktif resmi produksi: gemini-2.5-flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
 
     const response = await fetch(url, {
         method: "POST",
@@ -304,9 +337,7 @@ async function analyzeImageWithGemini(geminiKey, base64Image, retryCount = 0) {
             if (outputResult) {
                 outputResult.value = `[Rate Limit Google AI] Batas request tercapai. Menunggu jeda cooldown (15 detik)... [Percobaan ${retryCount + 1}/2]`;
             }
-            // Tunggu 15 detik sesuai kebijakan Google API
             await new Promise(resolve => setTimeout(resolve, 15000));
-            // Coba lagi secara otomatis
             return analyzeImageWithGemini(geminiKey, base64Image, retryCount + 1);
         } else {
             throw new Error("Batas request tercapai. Silakan tunggu 1 menit sebelum mencoba lagi, atau gunakan API Key Google AI Studio lainnya.");
@@ -479,6 +510,17 @@ async function generatePrompt() {
             ? `\n\nANALISIS VISUAL DARI GAMBAR REFERENSI:\n${visualAnalysisResult}\n\nInstruksi Integrasi Gambar: Ambil skema warna, nuansa pencahayaan, estetika latar belakang, dan harmoni komposisi dari analisis visual gambar di atas, lalu padukan secara sempurna ke dalam Master Prompt.`
             : "";
 
+        const isBackgroundOnly = String(designType).toLowerCase().includes("background");
+        const textRulesInstruction = isBackgroundOnly
+            ? `2. ATURAN KETAT BACKGROUND ONLY (TANPA TEKS):
+   - Kategori ini adalah MURNI GAMBAR LATAR BELAKANG / TEMPLATE KOSONG.
+   - DILARANG SEPERTI APAPUN mencantumkan teks, huruf, angka, kata-kata, atau logo pada hasil gambar visual.
+   - Buat komposisi visual dengan area kosong bersih (clean copy-space) yang siap ditempeli teks secara manual di software editing.`
+            : `2. ATURAN KETAT TEKS DESAIN (BAHASA INDONESIA):
+   - Semua teks yang dirender (Judul Utama, Sub-Judul, Label seperti "Hari/Tanggal:", "Lokasi:", "HTM:", "Kontak:", dll.) HARUS TETAP DALAM BAHASA INDONESIA.
+   - DILARANG Menerjemahkan kata label ke Bahasa Inggris (DILARANG pakai "Date:", "Location:", "Performers:", dll).
+   - Selalu apit teks Indonesia dalam tanda petik ganda, contoh: "OJO DUMEH FEST", "Hari/Tanggal: Minggu, 2 Agustus 2026".`;
+
         const metaPromptText = `Anda adalah seorang Senior Graphic Designer, Art Director, dan Expert AI Prompt Engineer.
 
 Tugas Anda adalah menerjemahkan brief desain di bawah ini menjadi 1 MASTER PROMPT GAMBAR (dalam Bahasa Inggris) yang sangat detail, profesional, dan siap digunakan pada generator AI [${targetAi}].
@@ -502,10 +544,7 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 =========================================
 1. BAHASA DESKRIPSI: Tulis seluruh deskripsi visual, komposisi, pencahayaan, dan latar belakang dalam BAHASA INGGRIS yang kaya detail.
 
-2. ATURAN KETAT TEKS POSTER (BAHASA INDONESIA):
-   - Semua teks yang dirender (Judul Utama, Sub-Judul, Label seperti "Hari/Tanggal:", "Lokasi:", "HTM:", "Kontak:", dll.) HARUS TETAP DALAM BAHASA INDONESIA.
-   - DILARANG Menerjemahkan kata label ke Bahasa Inggris (DILARANG pakai "Date:", "Location:", "Performers:", dll).
-   - Selalu apit teks Indonesia dalam tanda petik ganda, contoh: "OJO DUMEH FEST", "Hari/Tanggal: Minggu, 2 Agustus 2026".
+${textRulesInstruction}
 
 3. ATURAN ANTI-AI LOOK & ESTETIKA MANUSIA:
    - Hindari efek AI generik: cegah kulit tampak plastis/licin berlebihan, hindari pencahayaan 'over-saturated glossy glow' buatan.
