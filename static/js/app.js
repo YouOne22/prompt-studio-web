@@ -442,9 +442,8 @@ async function generatePrompt() {
         }
     });
 
-    // CEK APAKAH PENGGUNA MENGISI DETAIL TEKS
+    // Cek ketersediaan konten teks dari pengguna
     const hasTextContent = detailsArr.length > 0;
-
     const detailsText = hasTextContent 
         ? detailsArr.join("\n") 
         : "- (Pengguna TIDAK menginput teks/konten tulisan apa pun).";
@@ -456,12 +455,69 @@ async function generatePrompt() {
         generateBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Memproses Prompt...`;
     }
 
+    let metaPromptText = ""; // Deklarasi variabel utama secara aman
+
     try {
-        // ... (Kode Ambil API Key & Gemini Vision tetap sama) ...
+        // ------------------------------------------------------------------
+        // STEP 3: MINTA API KEYS (GROQ & GEMINI JIKA ADA GAMBAR)
+        // ------------------------------------------------------------------
+        let groqApiKey = document.getElementById("groqApiKeyInput")?.value.trim() || localStorage.getItem("groq_api_key") || "";
+
+        if (!groqApiKey) {
+            groqApiKey = prompt("Masukkan Groq API Key Anda (gsk_...):");
+            if (groqApiKey) {
+                groqApiKey = groqApiKey.trim();
+                saveGroqApiKey(groqApiKey);
+                if (document.getElementById("groqApiKeyInput")) {
+                    document.getElementById("groqApiKeyInput").value = groqApiKey;
+                }
+            }
+        }
+
+        if (!groqApiKey) {
+            throw new Error("API Key Groq kosong atau belum diisi.");
+        }
+
+        let visualAnalysisResult = "";
+        let imageInstructionSection = ""; // Inisialisasi awal variabel agar tidak ReferenceError
+
+        // TAHAP A: JIKA GAMBAR DIUNGGAH -> JALANKAN GOOGLE GEMINI VISION
+        if (currentBase64Image) {
+            outputResult.value = "Tahap 1/2: Menganalisis elemen & gaya visual gambar...";
+
+            let geminiApiKey = document.getElementById("geminiApiKeyInput")?.value.trim() || localStorage.getItem("gemini_api_key") || "";
+
+            if (!geminiApiKey) {
+                geminiApiKey = prompt("Masukkan API Key Anda (dari AI Studio):");
+                if (geminiApiKey) {
+                    geminiApiKey = geminiApiKey.trim();
+                    saveGeminiApiKey(geminiApiKey);
+                    if (document.getElementById("geminiApiKeyInput")) {
+                        document.getElementById("geminiApiKeyInput").value = geminiApiKey;
+                    }
+                }
+            }
+
+            if (!geminiApiKey) {
+                throw new Error("API Key diperlukan untuk menganalisis gambar referensi.");
+            }
+
+            // Panggil Fungsi Gemini Vision
+            visualAnalysisResult = await analyzeImageWithGemini(geminiApiKey, currentBase64Image);
+
+            if (visualAnalysisResult) {
+                imageInstructionSection = `\n\nANALISIS VISUAL DARI GAMBAR REFERENSI:\n${visualAnalysisResult}\n\nInstruksi Integrasi Gambar: Ambil skema warna, nuansa pencahayaan, estetika latar belakang, dan harmoni komposisi dari analisis visual gambar di atas, lalu padukan secara sempurna ke dalam Master Prompt.`;
+            }
+        }
+
+        // TAHAP B: SUSUN METAPROMPT DAN PROSES KE GROQ API
+        outputResult.value = currentBase64Image 
+            ? "Tahap 2/2: Menggabungkan hasil analisis visual & meracik Master Prompt dengan Groq..." 
+            : "Menghubungkan ke Groq API untuk meracik Master Prompt...";
 
         const isBackgroundOnly = String(designType).toLowerCase().includes("background");
 
-        // DYNAMIC RULE: JIKA KOSONG / BACKGROUND ONLY -> TEGAS DILARANG BUAT TEKS HALUSINASI
+        // DYNAMIC RULE: JIKA KOSONG / BACKGROUND ONLY -> TEGAS DILARANG BUAT TEKS FIKTIF
         const textRulesInstruction = (isBackgroundOnly || !hasTextContent)
             ? `2. ATURAN KETAT TANPA TEKS (PURE VISUAL ARTWORK):
    - Formulir teks KOSONG / TIDAK DIISI oleh pengguna.
@@ -473,7 +529,7 @@ async function generatePrompt() {
    - Semua teks yang dirender HARUS TETAP DALAM BAHASA INDONESIA (DILARANG menerjemahkan label ke Bahasa Inggris).
    - Apit teks Indonesia dalam tanda petik ganda.`;
 
-        const metaPromptText = `Anda adalah seorang Senior Graphic Designer, Art Director, dan Expert AI Prompt Engineer.
+        metaPromptText = `Anda adalah seorang Senior Graphic Designer, Art Director, dan Expert AI Prompt Engineer.
 
 Tugas Anda adalah menerjemahkan brief desain di bawah ini menjadi 1 MASTER PROMPT GAMBAR (dalam Bahasa Inggris) yang sangat detail, profesional, dan siap digunakan pada generator AI [${targetAi}].
 
@@ -498,18 +554,18 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
 ${textRulesInstruction}
 
-2. ATURAN ANTI-AI LOOK & ESTETIKA MANUSIA:
+3. ATURAN ANTI-AI LOOK & ESTETIKA MANUSIA:
    - Hindari efek AI generik: cegah kulit tampak plastis/licin berlebihan, hindari pencahayaan 'over-saturated glossy glow' buatan.
    - Gunakan estetika desain grafis profesional buatan manusia: pencahayaan realistis, tekstur cetak alami, grain mikro yang halus, harmoni warna editorial, dan tata letak dengan 'white space' yang seimbang.
 
-3. OPTIMASI SINTAKS ENGINE TARGET [${targetAi}]:
+4. OPTIMASI SINTAKS ENGINE TARGET [${targetAi}]:
    - Jika target Midjourney: Sertakan parameter aspect ratio yang sesuai di ujung prompt (misal: --ar 3:4 atau --ar 9:16) dan gunakan '--style raw'.
    - Jika target FLUX / DALL-E / ChatGPT: Gunakan deskripsi natural language yang sangat jelas dan terstruktur tanpa tag spaming.
 
-4. DATA KOSONG:
+5. DATA KOSONG:
    - Jika tidak ada detail teks yang diisi pengguna, JANGAN PERNAH mengarang teks/judul palsu.
 
-5. FORMAT OUTPUT: Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa pengantar atau penjelasan tambahan.`;
+6. FORMAT OUTPUT: Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa pengantar atau penjelasan tambahan.`;
 
         // ------------------------------------------------------------------
         // STEP 4: KIRIMKAN PROMPT TERSTRUKTUR KE GROQ (LLAMA 3.3 70B)
@@ -557,7 +613,7 @@ ${textRulesInstruction}
 
     } catch (error) {
         console.error("Gagal melakukan permintaan API Pipeline:", error);
-        outputResult.value = `/* [ERROR PIPELINE: ${error.message}] */\n\n/* METAPROMPT LOKAL (Dapat langsung di-copy ke ChatGPT / Claude): */\n\n` + (typeof metaPromptText !== 'undefined' ? metaPromptText : "");
+        outputResult.value = `/* [ERROR PIPELINE: ${error.message}] */\n\n/* METAPROMPT LOKAL (Dapat langsung di-copy ke ChatGPT / Claude): */\n\n` + (metaPromptText || "");
     } finally {
         isGenerating = false;
         if (generateBtn) {
