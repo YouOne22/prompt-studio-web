@@ -1,5 +1,5 @@
 const OPTIONS_DATA = {
-    "Background": {
+    "Background Only": {
         subStyles: [
             "Pengajian / Keagamaan / Hari Besar",
             "Spanduk Resmi / Pemerintahan / Instansi",
