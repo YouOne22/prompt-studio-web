@@ -35,7 +35,7 @@ const OPTIONS_DATA = {
             { id: "warna", label: "Preferensi Warna Dominan & Palet", type: "text", placeholder: "Contoh: Hijau Tua & Emas / Merah Putih & Gold Trim / Dark Blue & Neon" },
             { id: "catatanKhusus", label: "Gaya Visual & Rendering AI", type: "textarea", placeholder: "Contoh: Efek pencahayaan lembut (soft lighting), depth of field, gaya 3D photorealistic, tanpa ada teks tulisan sama sekali..." }
         ]
-    }
+    },
     "Spanduk": {
         subStyles: [
             "Pengajian / Keagamaan / Hari Besar",
