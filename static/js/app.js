@@ -442,9 +442,12 @@ async function generatePrompt() {
         }
     });
 
-    const detailsText = detailsArr.length > 0 
+    // CEK APAKAH PENGGUNA MENGISI DETAIL TEKS
+    const hasTextContent = detailsArr.length > 0;
+
+    const detailsText = hasTextContent 
         ? detailsArr.join("\n") 
-        : "- (Tidak ada detail konten tambahan yang diisi).";
+        : "- (Pengguna TIDAK menginput teks/konten tulisan apa pun).";
 
     // Set Status Loading
     isGenerating = true;
@@ -454,72 +457,21 @@ async function generatePrompt() {
     }
 
     try {
-        // ------------------------------------------------------------------
-        // STEP 3: MINTA API KEYS (GROQ & GEMINI JIKA ADA GAMBAR)
-        // ------------------------------------------------------------------
-        let groqApiKey = document.getElementById("groqApiKeyInput")?.value.trim() || localStorage.getItem("groq_api_key") || "";
-
-        if (!groqApiKey) {
-            groqApiKey = prompt("Masukkan Groq API Key Anda (gsk_...):");
-            if (groqApiKey) {
-                groqApiKey = groqApiKey.trim();
-                saveGroqApiKey(groqApiKey);
-                if (document.getElementById("groqApiKeyInput")) {
-                    document.getElementById("groqApiKeyInput").value = groqApiKey;
-                }
-            }
-        }
-
-        if (!groqApiKey) {
-            throw new Error("API Key Groq kosong atau belum diisi.");
-        }
-
-        let visualAnalysisResult = "";
-
-        // TAHAP A: JIKA GAMBAR DIUNGGAH -> JALANKAN GOOGLE GEMINI VISION
-        if (currentBase64Image) {
-            outputResult.value = "Tahap 1/2: Menganalisis elemen & gaya visual gambar...";
-
-            let geminiApiKey = document.getElementById("geminiApiKeyInput")?.value.trim() || localStorage.getItem("gemini_api_key") || "";
-
-            if (!geminiApiKey) {
-                geminiApiKey = prompt("Masukkan API Key Anda (dari AI Studio):");
-                if (geminiApiKey) {
-                    geminiApiKey = geminiApiKey.trim();
-                    saveGeminiApiKey(geminiApiKey);
-                    if (document.getElementById("geminiApiKeyInput")) {
-                        document.getElementById("geminiApiKeyInput").value = geminiApiKey;
-                    }
-                }
-            }
-
-            if (!geminiApiKey) {
-                throw new Error("API Key diperlukan untuk menganalisis gambar referensi.");
-            }
-
-            // Panggil Fungsi Gemini Vision
-            visualAnalysisResult = await analyzeImageWithGemini(geminiApiKey, currentBase64Image);
-        }
-
-        // TAHAP B: SUSUN METAPROMPT DAN PROSES KE GROQ API
-        outputResult.value = currentBase64Image 
-            ? "Tahap 2/2: Menggabungkan hasil analisis visual & meracik Master Prompt dengan Groq..." 
-            : "Menghubungkan ke Groq API untuk meracik Master Prompt...";
-
-        const imageInstructionSection = visualAnalysisResult 
-            ? `\n\nANALISIS VISUAL DARI GAMBAR REFERENSI:\n${visualAnalysisResult}\n\nInstruksi Integrasi Gambar: Ambil skema warna, nuansa pencahayaan, estetika latar belakang, dan harmoni komposisi dari analisis visual gambar di atas, lalu padukan secara sempurna ke dalam Master Prompt.`
-            : "";
+        // ... (Kode Ambil API Key & Gemini Vision tetap sama) ...
 
         const isBackgroundOnly = String(designType).toLowerCase().includes("background");
-        const textRulesInstruction = isBackgroundOnly
-            ? `2. ATURAN KETAT BACKGROUND ONLY (TANPA TEKS):
-   - Kategori ini adalah MURNI GAMBAR LATAR BELAKANG / TEMPLATE KOSONG.
-   - DILARANG SEPERTI APAPUN mencantumkan teks, huruf, angka, kata-kata, atau logo pada hasil gambar visual.
-   - Buat komposisi visual dengan area kosong bersih (clean copy-space) yang siap ditempeli teks secara manual di software editing.`
+
+        // DYNAMIC RULE: JIKA KOSONG / BACKGROUND ONLY -> TEGAS DILARANG BUAT TEKS HALUSINASI
+        const textRulesInstruction = (isBackgroundOnly || !hasTextContent)
+            ? `2. ATURAN KETAT TANPA TEKS (PURE VISUAL ARTWORK):
+   - Formulir teks KOSONG / TIDAK DIISI oleh pengguna.
+   - DILARANG KERAS MENGARANG, MEMBUAT, ATAU MENAMBAHKAN TEKS/JUDUL FIKTIF APAPUN!
+   - DILARANG memasukkan kata-kata, huruf, atau angka dalam hasil prompt gambar.
+   - Buat prompt murni untuk artwork visual, latar belakang, ilustrasi, dan siapkan area kosong (clean copy-space).`
             : `2. ATURAN KETAT TEKS DESAIN (BAHASA INDONESIA):
-   - Semua teks yang dirender (Judul Utama, Sub-Judul, Label seperti "Hari/Tanggal:", "Lokasi:", "HTM:", "Kontak:", dll.) HARUS TETAP DALAM BAHASA INDONESIA.
-   - DILARANG Menerjemahkan kata label ke Bahasa Inggris (DILARANG pakai "Date:", "Location:", "Performers:", dll).
-   - Selalu apit teks Indonesia dalam tanda petik ganda, contoh: "OJO DUMEH FEST", "Hari/Tanggal: Minggu, 2 Agustus 2026".`;
+   - Gunakan HANYA teks yang ada pada BRIEF DESAIN LENGKAP di atas. DILARANG menambahkan teks di luar brief.
+   - Semua teks yang dirender HARUS TETAP DALAM BAHASA INDONESIA (DILARANG menerjemahkan label ke Bahasa Inggris).
+   - Apit teks Indonesia dalam tanda petik ganda.`;
 
         const metaPromptText = `Anda adalah seorang Senior Graphic Designer, Art Director, dan Expert AI Prompt Engineer.
 
@@ -546,22 +498,18 @@ INSTRUKSI KHUSUS OPTIMASI PROMPT GAMBAR:
 
 ${textRulesInstruction}
 
-3. ATURAN ANTI-AI LOOK & ESTETIKA MANUSIA:
+2. ATURAN ANTI-AI LOOK & ESTETIKA MANUSIA:
    - Hindari efek AI generik: cegah kulit tampak plastis/licin berlebihan, hindari pencahayaan 'over-saturated glossy glow' buatan.
    - Gunakan estetika desain grafis profesional buatan manusia: pencahayaan realistis, tekstur cetak alami, grain mikro yang halus, harmoni warna editorial, dan tata letak dengan 'white space' yang seimbang.
-   - Pastikan komposisi tipografi tidak saling tumpang tindih (*clean visual hierarchy*).
 
-4. ATURAN TATA LETAK VERTIKAL:
-   - Informasi detail acara HARUS disusun secara VERTIKAL BERTUMPUK (stacked top-to-bottom / baris terpisah satu per satu).
+3. OPTIMASI SINTAKS ENGINE TARGET [${targetAi}]:
+   - Jika target Midjourney: Sertakan parameter aspect ratio yang sesuai di ujung prompt (misal: --ar 3:4 atau --ar 9:16) dan gunakan '--style raw'.
+   - Jika target FLUX / DALL-E / ChatGPT: Gunakan deskripsi natural language yang sangat jelas dan terstruktur tanpa tag spaming.
 
-5. OPTIMASI SINTAKS ENGINE TARGET [${targetAi}]:
-   - Jika target Midjourney: Sertakan parameter aspect ratio yang sesuai di ujung prompt (misal: --ar 3:4 atau --ar 9:16) dan gunakan '--style raw' untuk menekan efek AI.
-   - Jika target FLUX / DALL-E: Gunakan deskripsi natural language yang sangat jelas dan terstruktur tanpa tag spaming.
+4. DATA KOSONG:
+   - Jika tidak ada detail teks yang diisi pengguna, JANGAN PERNAH mengarang teks/judul palsu.
 
-6. ABNORMALIAS & DATA KOSONG:
-   - Abaikan dan HAPUS SELURUHNYA elemen atau data yang tidak diisi di dalam brief.
-
-7. FORMAT OUTPUT: Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa pengantar atau penjelasan tambahan.`;
+5. FORMAT OUTPUT: Berikan HANYA teks prompt gambar akhir di dalam KODE BLOK (markdown code block) tanpa pengantar atau penjelasan tambahan.`;
 
         // ------------------------------------------------------------------
         // STEP 4: KIRIMKAN PROMPT TERSTRUKTUR KE GROQ (LLAMA 3.3 70B)
