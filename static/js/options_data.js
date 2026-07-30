@@ -1,40 +1,45 @@
+const BACKGROUND_ONLY_CONFIG = { 
+    subStyles: [
+        "Pengajian / Keagamaan / Hari Besar",
+        "Spanduk Resmi / Pemerintahan / Instansi",
+        "Acara Formal / Seminar / Workshop",
+        "Promosi Usaha / Toko / Grand Opening",
+        "Kuliner / Makanan & Minuman",
+        "Selamat Datang / Ucapan / Banner",
+        "Properti / Jual Beli / Sewa",
+        "Kesenian & Budaya",
+        "Kemerdekaan (17 Agustus)",
+        "Musik / Konser / Festival",
+        "Wisuda / Purnawiyata",
+        "Keagamaan / Tabligh Akbar",
+        "Hajatan / Acara Desa / Gala Dinner",
+        "Abstrak / Wave / Soft Gradient",
+        "3D Stage Podium / Spatial Render",
+        "Minimalis / Textured Pattern"
+    ],
+    sizes: [
+        "Spanduk Horizontal (3 x 1)",
+        "Panggung Horizontal (2 x 1)",
+        "Banner Standar (16 : 9)",
+        "Potret / Story (9 : 16)",
+        "Persegi / Square (1 : 1)",
+        "Cetak A4 / Poster (3 : 4)",
+        "Kustom"
+    ],
+    fields: [
+        { id: "temaBackground", label: "Nuansa / Tema Utama Latar Belakang", type: "text", placeholder: "Contoh: Nuansa Islami Megah / Panggung Gala Dinner / Gradient Modern Corporate" },
+        { id: "elemenOrnamen", label: "Elemen Visual, Motif & Ornamen Utama", type: "textarea", placeholder: "Contoh:\n- Ornamen ukiran Arab & Lentera Emas gantung\n- Sorot lampu panggung (stage spotlight) & pita merah putih\n- Wave ribbon emas dengan partikel cahaya/bokeh" },
+        { id: "copySpace", label: "Penataan Area Kosong (Copy Space untuk Teks/Foto)", type: "text", placeholder: "Contoh: Sediakan area kosong bersih di bagian tengah untuk penulisan judul & foto pembicara" },
+        { id: "warna", label: "Preferensi Warna Dominan & Palet", type: "text", placeholder: "Contoh: Hijau Tua & Emas / Merah Putih & Gold Trim / Dark Blue & Neon" },
+        { id: "catatanKhusus", label: "Gaya Visual & Rendering AI", type: "textarea", placeholder: "Contoh: Efek pencahayaan lembut (soft lighting), depth of field, gaya 3D photorealistic, tanpa ada teks tulisan sama sekali..." }
+    ]
+};
+
 const OPTIONS_DATA = {
-    "Background Only": { 
-        subStyles: [
-            "Pengajian / Keagamaan / Hari Besar",
-            "Spanduk Resmi / Pemerintahan / Instansi",
-            "Acara Formal / Seminar / Workshop",
-            "Promosi Usaha / Toko / Grand Opening",
-            "Kuliner / Makanan & Minuman",
-            "Selamat Datang / Ucapan / Banner",
-            "Properti / Jual Beli / Sewa",
-            "Kesenian & Budaya",
-            "Kemerdekaan (17 Agustus)",
-            "Musik / Konser / Festival",
-            "Wisuda / Purnawiyata",
-            "Keagamaan / Tabligh Akbar",
-            "Hajatan / Acara Desa / Gala Dinner",
-            "Abstrak / Wave / Soft Gradient",
-            "3D Stage Podium / Spatial Render",
-            "Minimalis / Textured Pattern"
-        ],
-        sizes: [
-            "Spanduk Horizontal (3 x 1)",
-            "Panggung Horizontal (2 x 1)",
-            "Banner Standar (16 : 9)",
-            "Potret / Story (9 : 16)",
-            "Persegi / Square (1 : 1)",
-            "Cetak A4 / Poster (3 : 4)",
-            "Kustom"
-        ],
-        fields: [
-            { id: "temaBackground", label: "Nuansa / Tema Utama Latar Belakang", type: "text", placeholder: "Contoh: Nuansa Islami Megah / Panggung Gala Dinner / Gradient Modern Corporate" },
-            { id: "elemenOrnamen", label: "Elemen Visual, Motif & Ornamen Utama", type: "textarea", placeholder: "Contoh:\n- Ornamen ukiran Arab & Lentera Emas gantung\n- Sorot lampu panggung (stage spotlight) & pita merah putih\n- Wave ribbon emas dengan partikel cahaya/bokeh" },
-            { id: "copySpace", label: "Penataan Area Kosong (Copy Space untuk Teks/Foto)", type: "text", placeholder: "Contoh: Sediakan area kosong bersih di bagian tengah untuk penulisan judul & foto pembicara" },
-            { id: "warna", label: "Preferensi Warna Dominan & Palet", type: "text", placeholder: "Contoh: Hijau Tua & Emas / Merah Putih & Gold Trim / Dark Blue & Neon" },
-            { id: "catatanKhusus", label: "Gaya Visual & Rendering AI", type: "textarea", placeholder: "Contoh: Efek pencahayaan lembut (soft lighting), depth of field, gaya 3D photorealistic, tanpa ada teks tulisan sama sekali..." }
-        ]
-    }, // <-- Perbaikan: Koma ditambahkan di sini
+    // Daftarkan dua variasi kunci agar selalu ketemu
+    "Background Only": BACKGROUND_ONLY_CONFIG,
+    "Background_Only": BACKGROUND_ONLY_CONFIG,
+
     "Logo": {
         subStyles: [
             "Minimalis & Modern Flat",
