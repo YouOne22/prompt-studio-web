@@ -288,7 +288,7 @@ async function analyzeImageWithGemini(geminiKey, base64Image, retryCount = 0) {
     const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, "");
     
     // Menggunakan model aktif resmi: gemini-2.5-flash
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/qwen/qwen3.6-27b:generateContent?key=${geminiKey}`;
 
     const response = await fetch(url, {
         method: "POST",
