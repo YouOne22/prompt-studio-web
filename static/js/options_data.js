@@ -1,5 +1,4 @@
 const OPTIONS_DATA = {
-    // ⚠️ Ubah dari "Background" menjadi "Background Only" agar sama persis dengan dropdown
     "Background Only": { 
         subStyles: [
             "Pengajian / Keagamaan / Hari Besar",
@@ -35,7 +34,31 @@ const OPTIONS_DATA = {
             { id: "warna", label: "Preferensi Warna Dominan & Palet", type: "text", placeholder: "Contoh: Hijau Tua & Emas / Merah Putih & Gold Trim / Dark Blue & Neon" },
             { id: "catatanKhusus", label: "Gaya Visual & Rendering AI", type: "textarea", placeholder: "Contoh: Efek pencahayaan lembut (soft lighting), depth of field, gaya 3D photorealistic, tanpa ada teks tulisan sama sekali..." }
         ]
-    }
+    }, // <-- Perbaikan: Koma ditambahkan di sini
+    "Logo": {
+        subStyles: [
+            "Minimalis & Modern Flat",
+            "Mascot & Character Brand",
+            "Vintage / Retro / Badge",
+            "Corporate & Minimalist Lettermark",
+            "Luxury / Golden Ratio / Metallic",
+            "Futuristic & Geometric Tech",
+            "Hand-Drawn & Signature Style"
+        ],
+        sizes: [
+            "Persegi / Square (1 : 1)",
+            "Vektor Master Format (SVG/AI)",
+            "Kustom"
+        ],
+        fields: [
+            { id: "namaBrand", label: "Nama Brand / Usaha Utama", type: "text", placeholder: "Contoh: NR.PRST Repaint & Custom" },
+            { id: "taglineLogo", label: "Slogan / Sub-Teks / Tagline", type: "text", placeholder: "Contoh: Customized Part Solution" },
+            { id: "bidangUsaha", label: "Bidang Usaha / Industri / Spesialisasi", type: "text", placeholder: "Contoh: Bengkel Restorasi & Pengecatan Motor, Otomotif, Gaming" },
+            { id: "simbolIkon", label: "Elemen Ikon / Simbol Visual Utama", type: "textarea", placeholder: "Contoh:\n- Spray gun Pengecatan digabung dengan siluet piston\n- Huruf monogram 'NR' yang saling mengunci secara futuristik" },
+            { id: "warna", label: "Preferensi Warna Utama Logo", type: "text", placeholder: "Contoh: Hitam Carbon, Emas Metallic, Metallic Blue & Silver" },
+            { id: "catatanKhusus", label: "Gaya Desain & Rendering Logo", type: "textarea", placeholder: "Contoh: Isolasi logo pada latar polos (vector flat on white background), garis tegas, rasio simetris..." }
+        ]
+    },
     "Spanduk": {
         subStyles: [
             "Pengajian / Keagamaan / Hari Besar",
