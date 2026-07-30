@@ -5,6 +5,20 @@ NEGATIVE_PROMPT_RULES = (
     "'NAMA AGENDA:', or 'CATATAN:' on the banner layout—render ONLY the exact literal content values."
 )
 
+BACKGROUND_ONLY_NEGATIVE_PROMPT = (
+    "STRICTLY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO TYPOGRAPHY, NO ALPHABET, "
+    "NO LOGOS, NO EMBLEMS, NO WATERMARKS, NO READABLE CHARACTERS. "
+    "DO NOT print any text elements or placeholders. "
+    "Pure empty graphic template background only with clean layout framing."
+)
+
+ANTI_NOISE_BLOCK = """
+[ANTI-NOISE & SOLID COLOR CONSTRAINTS]
+- STRICTLY NO NOISE, NO FILM GRAIN, NO SPECKLES, NO DITHERING, NO BLURRY DOTS, AND NO TEXTURE ARTIFACTS INSIDE FLAT FILLS.
+- Text fills and graphic containers MUST be 100% UNIFORM SOLID FLAT COLORS (Pure Flat CMYK vector style).
+- Razor-sharp clean edges on all typography and shapes with ZERO compression artifacts or fuzzy gradients inside dark areas.
+"""
+
 def get_render_mode_instruction(render_mode: str) -> str:
     if "Mockup" in render_mode:
         return (
@@ -31,22 +45,15 @@ def build_art_direction_block(design_type: str, sub_style: str, orientation: str
 [LAYOUT GRID & PRINT SAFE ZONE]
 - Safe Margin: Maintain 3-5 cm inner margin for eyelets/cutting lines.
 - Hierarchy: 
-  1. Primary Focal Point (Main Title / Headline) – more prominent or visible than other elements, yet without being overly dominant
-  2. Secondary Focus (Sub-headline / Key Detail) – 60% smaller than the main headline
-  3. Action & Branding (Logos, Contact, Date, Location) - 40% smaller than the main headline.
+  1. Primary Focal Point (Main Title / Headline) – prominent and central
+  2. Secondary Focus (Sub-headline / Key Detail) – balanced scale
+  3. Action & Branding (Logos, Contact, Date, Location) - clear & legible
 
 [ANTI-AI LOOK & QUALITY CONSTRAINTS]
 - {NEGATIVE_PROMPT_RULES}
 - {render_inst}
+{ANTI_NOISE_BLOCK}
 """
-
-# Aturan khusus untuk Background Polosan
-BACKGROUND_ONLY_NEGATIVE_PROMPT = (
-    "STRICTLY NO TEXT, NO WORDS, NO LETTERS, NO NUMBERS, NO TYPOGRAPHY, NO ALPHABET, "
-    "NO LOGOS, NO EMBLEMS, NO WATERMARKS, NO READABLE CHARACTERS. "
-    "DO NOT print any text elements or placeholders. "
-    "Pure empty graphic template background only with clean layout framing."
-)
 
 def build_background_art_direction(design_type: str, orientation: str, size: str, render_mode: str) -> str:
     return f"""
