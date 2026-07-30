@@ -171,4 +171,4 @@ const OPTIONS_DATA = {
         ]
     }
 };
-
+window.OPTIONS_DATA = OPTIONS_DATA;
